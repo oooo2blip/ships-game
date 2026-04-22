@@ -1255,9 +1255,7 @@ function onPvpAttack(r, c, targetBoardType) {
         setMsg(`💥命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
-      // 命中后继续当前玩家的回合
-      hideEndTurnButton();
-      setMsg(`💥${currentPlayer}命中！继续攻击！`);
+      showEndTurnButton(`⏭️ ${currentPlayer}命中！点击"确认回合结束"按钮结束你的回合`);
     }
   }
 }
@@ -1353,11 +1351,8 @@ function onAttack(r,c){
         } else {
           setMsg(`💥地毯轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
         }
-      } else if (anyHit) {
-        hideEndTurnButton();
-        setMsg('💥地毯轰炸命中！继续攻击！');
       } else {
-        showEndTurnButton('⏭️ 地毯轰炸未命中！点击"确认回合结束"按钮结束你的回合');
+        showEndTurnButton(anyHit ? '⏭️ 地毯轰炸命中！点击"确认回合结束"按钮结束你的回合' : '⏭️ 地毯轰炸未命中！点击"确认回合结束"按钮结束你的回合');
       }
     }, 1000);
     return;
@@ -1399,11 +1394,8 @@ function onAttack(r,c){
         } else {
           setMsg(`💥范围轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
         }
-      } else if (anyHit) {
-        hideEndTurnButton();
-        setMsg('💥范围轰炸命中！继续攻击！');
       } else {
-        showEndTurnButton('⏭️ 范围轰炸未命中！点击"确认回合结束"按钮结束你的回合');
+        showEndTurnButton(anyHit ? '⏭️ 范围轰炸命中！点击"确认回合结束"按钮结束你的回合' : '⏭️ 范围轰炸未命中！点击"确认回合结束"按钮结束你的回合');
       }
     }, 800);
     return;
@@ -1433,11 +1425,8 @@ function onAttack(r,c){
       } else {
         setMsg(`💥穿甲打击！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
-    } else if (result.hit) {
-      hideEndTurnButton();
-      setMsg('💥穿甲打击命中！继续攻击！');
     } else {
-      showEndTurnButton('⏭️ 穿甲打击未命中！点击"确认回合结束"按钮结束你的回合');
+      showEndTurnButton(result.hit ? '⏭️ 穿甲打击命中！点击"确认回合结束"按钮结束你的回合' : '⏭️ 穿甲打击未命中！点击"确认回合结束"按钮结束你的回合');
     }
     return;
   }
@@ -1496,11 +1485,8 @@ function onAttack(r,c){
               } else {
                 setMsg(hit ? `⚡闪电连击命中！还剩 ${volleyShotsLeft} 次攻击机会` : `⚡闪电连击未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
               }
-            } else if (hit) {
-              hideEndTurnButton();
-              setMsg('⚡闪电连击命中！继续攻击！');
             } else {
-              showEndTurnButton('⏭️ 闪电连击未命中！点击"确认回合结束"按钮结束你的回合');
+              showEndTurnButton(hit ? '⏭️ 闪电连击命中！点击"确认回合结束"按钮结束你的回合' : '⏭️ 闪电连击未命中！点击"确认回合结束"按钮结束你的回合');
             }
           }, 500);
         });
@@ -1517,8 +1503,7 @@ function onAttack(r,c){
             setMsg(`💥命中！闪电连击未触发，还剩 ${volleyShotsLeft} 次攻击机会`);
           }
         } else {
-          hideEndTurnButton();
-          setMsg('💥命中！继续攻击！');
+          showEndTurnButton('⏭️ 命中！点击"确认回合结束"按钮结束你的回合');
         }
       }
     }
@@ -1589,8 +1574,7 @@ function onAttack(r,c){
         setMsg(`💥命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
-      hideEndTurnButton();
-      setMsg('💥命中！继续攻击！');
+      showEndTurnButton('⏭️ 命中！点击"确认回合结束"按钮结束你的回合');
     }
   }
 }
