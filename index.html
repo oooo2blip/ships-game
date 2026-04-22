@@ -583,7 +583,12 @@ function init(){
     // 玩家1的棋盘 - 总是用于放置和防御
     pc.onclick=()=>onPlace(r,c,'player');
     pc.onmouseenter=()=>hoverPreview(pc,r,c,'player');
-    pc.onmouseleave=()=>pc.classList.remove('preview');
+    pc.onmouseleave=()=>{
+      // 清除玩家棋盘上的所有预览效果
+      document.querySelectorAll('.player-grid .cell.preview, .player-grid .cell.preview-invalid').forEach(cell => {
+        cell.classList.remove('preview', 'preview-invalid');
+      });
+    };
     document.getElementById('playerGrid').appendChild(pc);
     
     const ec=document.createElement('div');ec.className='cell';ec.dataset.row=r;ec.dataset.col=c;
@@ -592,7 +597,12 @@ function init(){
       // 双人模式：玩家2在enemyGrid上放置船只
       ec.onclick=()=>onPlace(r,c,'enemy');
       ec.onmouseenter=()=>hoverPreview(ec,r,c,'enemy');
-      ec.onmouseleave=()=>ec.classList.remove('preview');
+      ec.onmouseleave=()=>{
+        // 清除敌方棋盘上的所有预览效果
+        document.querySelectorAll('.enemy-grid .cell.preview, .enemy-grid .cell.preview-invalid').forEach(cell => {
+          cell.classList.remove('preview', 'preview-invalid');
+        });
+      };
     } else {
       // 人机模式：enemyGrid只用于攻击
       ec.onclick=()=>onAttack(r,c);
