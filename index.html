@@ -38,14 +38,14 @@
             </div>
         </header>
 
-        <!-- 主游戏区域 -->
+        <!-- 主游戏区域 - 左中右三栏 -->
         <main class="game-main">
-            <!-- 玩家棋盘区域 -->
+            <!-- 左侧：我方棋盘和舰队信息 -->
             <section class="board-section player-section">
                 <div class="section-header">
                     <h2 class="section-title">我方舰队</h2>
-                    <div class="fleet-status" id="player-fleet-status"></div>
                 </div>
+                <div class="fleet-status-large" id="player-fleet-status"></div>
                 <div class="board-container">
                     <div class="board-3d-wrapper">
                         <div id="player-board" class="game-board">
@@ -63,7 +63,7 @@
                 </div>
             </section>
 
-            <!-- 中央3D场景 -->
+            <!-- 中央：3D战场场景 -->
             <section class="scene-section">
                 <div class="scene-container">
                     <canvas id="three-scene"></canvas>
@@ -77,12 +77,12 @@
                 </div>
             </section>
 
-            <!-- 敌方棋盘区域 -->
+            <!-- 右侧：敌方棋盘和环境状态面板 -->
             <section class="board-section enemy-section">
                 <div class="section-header">
                     <h2 class="section-title">敌方海域</h2>
-                    <div class="fleet-status" id="enemy-fleet-status"></div>
                 </div>
+                <div class="fleet-status-large" id="enemy-fleet-status"></div>
                 <div class="board-container">
                     <div class="board-3d-wrapper">
                         <div id="enemy-board" class="game-board">
@@ -96,6 +96,21 @@
                         <span class="coord-value" id="target-coord">-</span>
                     </div>
                     <button id="fire-btn" class="btn btn-primary btn-large" disabled>发射</button>
+                </div>
+                <div class="environment-panel">
+                    <h3 class="panel-title">环境状态</h3>
+                    <div class="env-item">
+                        <span class="env-label">海况:</span>
+                        <span class="env-value">平静</span>
+                    </div>
+                    <div class="env-item">
+                        <span class="env-label">风向:</span>
+                        <span class="env-value">东北风 3级</span>
+                    </div>
+                    <div class="env-item">
+                        <span class="env-label">能见度:</span>
+                        <span class="env-value">良好</span>
+                    </div>
                 </div>
             </section>
         </main>

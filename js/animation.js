@@ -26,9 +26,9 @@ class GameAnimation {
         if (fromWrapper) {
             gsap.to(fromWrapper, {
                 duration: 0.2,
-                rotationX: '55deg',
-                rotationZ: '-40deg',
-                y: -10,
+                rotationX: '20deg',
+                rotationZ: '5deg',
+                scale: 1.02,
                 ease: 'power2.out'
             });
         }
@@ -36,9 +36,9 @@ class GameAnimation {
         if (toWrapper) {
             gsap.to(toWrapper, {
                 duration: 0.2,
-                rotationX: '65deg',
-                rotationZ: '-50deg',
-                y: 10,
+                rotationX: '10deg',
+                rotationZ: '-5deg',
+                scale: 1.02,
                 ease: 'power2.out'
             });
         }
@@ -54,9 +54,9 @@ class GameAnimation {
         if (fromWrapper) {
             gsap.to(fromWrapper, {
                 duration: 0.3,
-                rotationX: '60deg',
-                rotationZ: '-45deg',
-                y: 0,
+                rotationX: '15deg',
+                rotationZ: '0deg',
+                scale: 1,
                 ease: 'power2.out'
             });
         }
@@ -64,9 +64,9 @@ class GameAnimation {
         if (toWrapper) {
             gsap.to(toWrapper, {
                 duration: 0.3,
-                rotationX: '60deg',
-                rotationZ: '-45deg',
-                y: 0,
+                rotationX: '15deg',
+                rotationZ: '0deg',
+                scale: 1,
                 ease: 'power2.out'
             });
         }
