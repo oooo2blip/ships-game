@@ -1,176 +1,449 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>海战棋 - 回合制坐标攻防游戏</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚓ 海战棋 - Naval Warfare</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(180deg,#87CEEB 0%,#5BA3D9 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;color:#1a3a52;user-select:none}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20%30%,rgba(255,255,255,.08)0%,transparent 50%),radial-gradient(ellipse at 80%70%,rgba(255,255,255,.06)0%,transparent 50%);pointer-events:none;z-index:0;animation:waveBg 8s ease-in-out infinite alternate}
+@keyframes waveBg{0%{transform:translateY(0)}100%{transform:translateY(-10px)}}
+.title{font-size:2.4em;font-weight:800;margin-top:20px;text-shadow:0 3px 6px rgba(26,58,82,.25);letter-spacing:4px;z-index:1;position:relative;display:flex;align-items:center;gap:12px}
+.title span{animation:titleBob 3s ease-in-out infinite}
+@keyframes titleBob{0%,100%{transform:translateY(0)}25%{transform:translateY(-3px)rotate(-2deg)}75%{transform:translateY(2px)rotate(2deg)}}
+.status-bar{z-index:1;position:relative;margin-top:12px;padding:10px 28px;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border-radius:30px;font-size:1.15em;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.2);box-shadow:0 4px 15px rgba(0,0,0,.08);transition:all .3s ease;max-width:90%;text-align:center}
+.status-bar.placing{background:rgba(76,175,80,.35)}.status-bar.battle{background:rgba(244,67,54,.35)}.status-bar.win{background:rgba(76,175,80,.55);font-size:1.3em}.status-bar.lose{background:rgba(244,67,54,.55);font-size:1.3em}
+.game-container{display:flex;gap:40px;margin-top:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;z-index:1;position:relative;padding-bottom:30px}
+.board-panel{display:flex;flex-direction:column;align-items:center;gap:8px}
+.board-label{font-size:1.1em;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.25);letter-spacing:2px}
+.grid-wrapper{position:relative;padding:16px;background:rgba(255,255,255,.08);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.15)}
+.grid{display:grid;grid-template-columns:repeat(10,48px);grid-template-rows:repeat(10,48px);gap:3px;position:relative}
+.cell{width:48px;height:48px;background:rgba(135,206,250,.45);border:1.5px solid rgba(255,255,255,.22);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.5em;transition:all .15s ease;position:relative}
+.cell:hover{background:rgba(255,255,255,.35);transform:scale(1.06);z-index:2}
+.cell.has-ship{background:rgba(139,105,65,.55);border-color:rgba(101,75,48,.5)}
+.cell.hit{background:rgba(244,67,54,.7)!important;border-color:#c62828;animation:hitPulse .4s ease}
+@keyframes hitPulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.cell.miss{background:rgba(255,255,255,.25)!important}
+.cell.miss::after{content:'✕';color:rgba(255,255,255,.75);font-size:1.4em;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,.2);animation:missPop .3s ease}
+@keyframes missPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+.ship-svg{width:38px;height:38px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.cell.sunk{background:rgba(80,60,40,.7)!important;animation:sinkShake .5s ease}
+@keyframes sinkShake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(4deg)}}
+.ship-dock{z-index:1;position:relative;background:rgba(255,255,255,.13);backdrop-filter:blur(10px);border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:12px;min-width:220px;box-shadow:0 8px 28px rgba(0,0,0,.1)}
+.dock-title{font-size:1em;font-weight:700;color:#fff;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.2);letter-spacing:1px;border-bottom:1.5px solid rgba(255,255,255,.2);padding-bottom:10px}
+.ship-option{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.15);border-radius:10px;cursor:grab;transition:all .2s ease}
+.ship-option:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.4);transform:translateX(4px)}
+.ship-option.selected{border-color:#FFD700;background:rgba(255,215,0,.2);box-shadow:0 0 12px rgba(255,215,0,.3)}
+.ship-option.placed{opacity:.35;pointer-events:none;text-decoration:line-through}
+.ship-option-name{font-weight:600;color:#fff;font-size:.92em;white-space:nowrap}
+.ship-option-size{font-size:.8em;color:rgba(255,255,255,.65)}
+.controls{z-index:1;position:relative;display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.btn{padding:11px 26px;font-size:1em;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:all .2s ease;letter-spacing:1px;text-transform:uppercase}
+.btn-primary{background:linear-gradient(135deg,#43A047,#2E7D32);color:#fff;box-shadow:0 4px 12px rgba(46,125,50,.35)}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(46,125,50,.5)}
+.btn-secondary{background:linear-gradient(135deg,#42A5F5,#1976D2);color:#fff;box-shadow:0 4px 12px rgba(25,118,210,.35)}
+.btn-secondary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(25,118,210,.5)}
+.btn-danger{background:linear-gradient(135deg,#EF5350,#C62828);color:#fff;box-shadow:0 4px 12px rgba(198,40,40,.35)}
+.btn-danger:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(198,40,40,.5)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.rotate-hint{font-size:.85em;color:rgba(255,255,255,.8);text-align:center;margin-top:4px}
+.rotate-hint kbd{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-family:inherit}
+.scoreboard{z-index:1;position:relative;display:flex;gap:24px;margin-top:12px}
+.score-card{background:rgba(255,255,255,.13);backdrop-filter:blur(8px);padding:12px 24px;border-radius:12px;text-align:center;min-width:130px}
+.score-card-label{font-size:.82em;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.score-card-value{font-size:2em;font-weight:800;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.15)}
+.explosion{position:absolute;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,#FF5722,#FF9800,transparent);animation:explode .6s ease-out forwards;pointer-events:none;z-index:10}
+@keyframes explode{0%{transform:scale(.5);opacity:1}100%{transform:scale(3);opacity:0}}
+.sink-effect{animation:sinkDown 1s ease-in forwards}
+@keyframes sinkDown{0%{opacity:1;transform:translateY(0)rotate(0)}50%{opacity:.7;transform:translateY(10px)rotate(15deg)}100%{opacity:0;transform:translateY(30px)rotate(45deg)}}
+.thinking::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:translate(-50%,-50%)rotate(360deg)}}
+.battle-mode .player-grid .cell.has-ship:not(.hit):not(.sunk){background:rgba(135,206,250,.45)!important;border-color:rgba(255,255,255,.22)!important}
+.battle-mode .player-grid .cell.has-ship:not(.hit):not(.sunk) .ship-svg{display:none}
+@media(max-width:900px){.game-container{gap:20px}.grid{grid-template-columns:repeat(10,38px);grid-template-rows:repeat(10,38px)}.cell{width:38px;height:38px}.ship-svg{width:30px;height:30px}}
+@media(max-width:600px){.title{font-size:1.6em}.grid{grid-template-columns:repeat(10,32px);grid-template-rows:repeat(10,32px);gap:2px}.cell{width:32px;height:32px;font-size:1.1em}.ship-svg{width:26px;height:26px}.game-container{flex-direction:column;align-items:center}.ship-dock{min-width:unset;width:100%;max-width:340px;flex-direction:row;flex-wrap:wrap;justify-content:center}.dock-title{width:100%}}
+</style>
 </head>
 <body>
-    <div id="game-container">
-        <!-- 顶部状态栏 -->
-        <header class="game-header">
-            <div class="header-left">
-                <h1 class="game-title">海战棋</h1>
-                <span class="subtitle">BATTLESHIP</span>
-            </div>
-            <div class="header-center">
-                <div id="turn-indicator" class="turn-indicator">
-                    <span class="turn-label">当前回合</span>
-                    <span class="turn-player">玩家</span>
-                </div>
-                <div id="combo-counter" class="combo-counter hidden">
-                    <span class="combo-count">0</span>
-                    <span class="combo-label">连击</span>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="difficulty-selector">
-                    <label for="difficulty">难度:</label>
-                    <select id="difficulty">
-                        <option value="easy">新手</option>
-                        <option value="normal" selected>普通</option>
-                        <option value="hard">专家</option>
-                    </select>
-                </div>
-                <button id="start-btn" class="btn btn-primary">开始游戏</button>
-                <button id="restart-btn" class="btn btn-secondary hidden">重新开始</button>
-            </div>
-        </header>
 
-        <!-- 主游戏区域 - 中央对战布局 -->
-        <main class="game-main">
-            <!-- 左侧：我方舰队信息和控制 -->
-            <aside class="side-panel left-panel">
-                <div class="panel-section">
-                    <h3 class="panel-title">我方舰队</h3>
-                    <div class="fleet-status-vertical" id="player-fleet-status"></div>
-                </div>
-                <div class="panel-section">
-                    <div class="ship-placement-controls hidden" id="ship-placement">
-                        <h3 class="panel-title">舰船部署</h3>
-                        <div class="ship-selector" id="ship-selector"></div>
-                        <div class="placement-controls">
-                            <button id="rotate-btn" class="btn btn-small">旋转</button>
-                            <button id="random-placement-btn" class="btn btn-small">随机部署</button>
-                            <button id="confirm-placement-btn" class="btn btn-primary btn-small">确认部署</button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+<div class="title"><span>⚓</span> 海战棋 <span>⚓</span></div>
+<div class="status-bar placing" id="statusBar">🎯 放置你的舰队！选择船只后点击棋盘放置，按 R 或空格旋转</div>
 
-            <!-- 中央：对战棋盘区域 -->
-            <section class="battle-area">
-                <!-- 敌方棋盘 -->
-                <div class="board-wrapper enemy-wrapper">
-                    <div class="board-label">敌方海域</div>
-                    <div class="board-container">
-                        <div class="board-3d-wrapper">
-                            <div id="enemy-board" class="game-board">
-                                <!-- 棋盘格子将由JS生成 -->
-                            </div>
-                        </div>
-                    </div>
-                    <div class="attack-controls hidden" id="attack-controls">
-                        <div class="coordinate-display" id="coordinate-display">
-                            <span class="coord-label">目标坐标:</span>
-                            <span class="coord-value" id="target-coord">-</span>
-                        </div>
-                        <button id="fire-btn" class="btn btn-primary btn-large" disabled>发射</button>
-                    </div>
-                </div>
+<div class="game-container" id="gameContainer">
+  <div class="board-panel">
+    <div class="board-label">🏠 你的海域</div>
+    <div class="grid-wrapper"><div class="grid player-grid" id="playerGrid"></div></div>
+  </div>
+  <div class="ship-dock" id="shipDock">
+    <div class="dock-title">🚢 舰队编成</div>
+    <div class="rotate-hint">按 <kbd>R</kbd> / <kbd>Space</kbd> 旋转方向</div>
+  </div>
+  <div class="board-panel">
+    <div class="board-label">🎯 敌方海域</div>
+    <div class="grid-wrapper"><div class="grid enemy-grid" id="enemyGrid"></div></div>
+  </div>
+</div>
 
-                <!-- 中央：3D战场场景和消息 -->
-                <div class="center-connector">
-                    <div class="scene-container">
-                        <canvas id="three-scene"></canvas>
-                    </div>
-                    <div class="message-panel" id="message-panel">
-                        <div class="message-content" id="message-content">部署你的舰队，准备开战！</div>
-                    </div>
-                </div>
+<div class="controls">
+  <button class="btn btn-secondary" onclick="toggleRotation()">🔄 旋转方向</button>
+  <button class="btn btn-primary" id="startBtn" onclick="startBattle()" disabled>⚔️ 开始战斗！</button>
+  <button class="btn btn-danger" onclick="resetGame()">🔄 重新开始</button>
+</div>
 
-                <!-- 玩家棋盘 -->
-                <div class="board-wrapper player-wrapper">
-                    <div class="board-label">我方舰队</div>
-                    <div class="board-container">
-                        <div class="board-3d-wrapper">
-                            <div id="player-board" class="game-board">
-                                <!-- 棋盘格子将由JS生成 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+<div class="scoreboard">
+  <div class="score-card"><div class="score-card-label">你的击沉</div><div class="score-card-value" id="playerSinks">0 / 5</div></div>
+  <div style="align-self:center;color:#fff;font-weight:700;font-size:1.2em;">VS</div>
+  <div class="score-card"><div class="score-card-label">敌方击沉</div><div class="score-card-value" id="enemySinks">0 / 5</div></div>
+</div>
 
-            <!-- 右侧：敌方舰队信息和环境状态 -->
-            <aside class="side-panel right-panel">
-                <div class="panel-section">
-                    <h3 class="panel-title">敌方舰队</h3>
-                    <div class="fleet-status-vertical" id="enemy-fleet-status"></div>
-                </div>
-                <div class="panel-section">
-                    <h3 class="panel-title">环境状态</h3>
-                    <div class="environment-panel">
-                        <div class="env-item">
-                            <span class="env-label">海况:</span>
-                            <span class="env-value">平静</span>
-                        </div>
-                        <div class="env-item">
-                            <span class="env-label">风向:</span>
-                            <span class="env-value">东北风 3级</span>
-                        </div>
-                        <div class="env-item">
-                            <span class="env-label">能见度:</span>
-                            <span class="env-value">良好</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </main>
+<script>
+const GRID_SIZE = 10;
+const SHIPS_DATA = [
+  {name:'巡逻艇',size:2}, {name:'护卫舰',size:3}, {name:'巡洋舰',size:3},
+  {name:'战列舰',size:4}, {name:'航空母舰',size:5}
+];
 
-        <!-- 游戏结果弹窗 -->
-        <div id="game-over-modal" class="modal hidden">
-            <div class="modal-content">
-                <h2 id="result-title">游戏结束</h2>
-                <p id="result-message"></p>
-                <div class="result-stats">
-                    <div class="stat">
-                        <span class="stat-label">总发射次数</span>
-                        <span class="stat-value" id="total-shots">0</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">命中率</span>
-                        <span class="stat-value" id="hit-rate">0%</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">最高连击</span>
-                        <span class="stat-value" id="max-combo">0</span>
-                    </div>
-                </div>
-                <button id="play-again-btn" class="btn btn-primary btn-large">再来一局</button>
-            </div>
-        </div>
+function shipSvgSmall(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M10,38 Q16,44 32,44 Q48,44 54,38 L50,34 L14,34Z"fill="#8B6914"stroke="#5D4E37"stroke-width="1.5"/><rect x="18"y="28"width="28"height="7"rx="2"fill="#A0784C"stroke="#5D4E37"/><line x1="30"y1="28"x2="30"y2="14"stroke="#5D4E37"stroke-width="2"/><polygon points="30,14 42,20 30,20"fill="#C0392B"/></svg>`}
+function shipSvgMedium(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M6,40 Q16,47 32,47 Q48,47 58,40 L53,34 L11,34Z"fill="#8B6914"stroke="#5D4E37"stroke-width="1.5"/><rect x="14"y="27"width="36"height="8"rx="2"fill="#A0784C"stroke="#5D4E37"/><line x1="24"y1="27"x2="24"y2="10"stroke="#5D4E37"stroke-width="2.5"/><line x1="40"y1="27"x2="40"y2="14"stroke="#5D4E37"stroke-width="2"/><polygon points="24,10 38,17 24,17"fill="#C0392B"/><polygon points="40,14 50,19 40,19"fill="#E74C3C"/></svg>`}
+function shipSvgCruiser(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M5,41 Q17,48 32,48 Q47,48 59,41 L54,34 L10,34Z"fill="#7D5A33"stroke="#4A3728"stroke-width="1.5"/><rect x="12"y="26"width="40"height="9"rx="2"fill="#9B7653"stroke="#4A3728"/><rect x="22"y="20"width="20"height="7"rx="1"fill="#B8926A"stroke="#4A3728"/><line x1="28"y1="20"x2="28"y2="6"stroke="#4A3728"stroke-width="2.5"/><line x1="38"y1="20"x2="38"y2="10"stroke="#4A3728"stroke-width="2"/><polygon points="28,6 42,13 28,13"fill="#B03A2E"/></svg>`}
+function shipSvgLarge(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M3,43 Q16,51 32,51 Q48,51 61,43 L56,35 L8,35Z"fill="#6D4C2A"stroke="#3E2723"stroke-width="2"/><rect x="8"y="25"width="48"height="11"rx="2"fill="#8D6E43"stroke="#3E2723"stroke-width="1.5"/><rect x="18"y="17"width="28"height="9"rx="2"fill="#A88B6A"stroke="#3E2723"/><line x1="24"y1="17"x2="24"y2="4"stroke="#3E2723"stroke-width="3"/><line x1="42"y1="17"x2="42"y2="8"stroke="#3E2723"stroke-width="2.5"/><polygon points="24,4 40,12 24,12"fill="#922B21"/><polygon points="42,8 54,14 42,14"fill="#A93226"/></svg>`}
+function shipSvgCarrier(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M1,44 Q16,53 32,53 Q48,53 63,44 L58,36 L6,36Z"fill="#5D4037"stroke="#3E2723"stroke-width="2"/><rect x="4"y="24"width="56"height="13"rx="3"fill="#795548"stroke="#3E2723"stroke-width="1.5"/><rect x="22"y="14"width="14"height="11"rx="1"fill="#8D6E63"stroke="#3E2723"stroke-width="1.5"/><line x1="28"y1="14"x2="28"y2="2"stroke="#3E2723"stroke-width="3"/><polygon points="28,2 42,10 28,10"fill="#C0392B"/></svg>`}
 
-        <!-- 音效控制 -->
-        <div class="sound-controls">
-            <button id="sound-toggle" class="sound-btn" title="音效开关">
-                <span class="sound-icon">🔊</span>
-            </button>
-            <div class="volume-control hidden" id="volume-control">
-                <input type="range" id="volume-slider" min="0" max="100" value="70">
-            </div>
-        </div>
-    </div>
+const SHIP_SVGS=[shipSvgSmall,shipSvgMedium,shipSvgCruiser,shipSvgLarge,shipSvgCarrier];
 
-    <!-- 引入库 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/animation.js"></script>
-    <script src="js/ai.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/scene.js"></script>
-    <script src="js/main.js"></script>
+let playerBoard=[],enemyBoard=[];
+let playerShips=[],enemyShips=[];
+let selectedIdx=null,isHorizontal=true;
+let phase='placing',isPlayerTurn=true;
+let pSunk=0,eSunk=0;
+let aiHunt=false,aiStack=[],aiLastHit=null;
+
+// ===== 初始化 =====
+function init(){
+  playerBoard=Array.from({length:GRID_SIZE},()=>Array(GRID_SIZE).fill(null));
+  enemyBoard=Array.from({length:GRID_SIZE},()=>Array(GRID_SIZE).fill(null));
+  playerShips=[];enemyShips=[];selectedIdx=null;isHorizontal=true;
+  phase='placing';isPlayerTurn=true;pSunk=0;eSunk=0;
+  aiHunt=false;aiStack=[];aiLastHit=null;
+
+  document.getElementById('playerGrid').innerHTML='';
+  document.getElementById('enemyGrid').innerHTML='';
+  document.getElementById('gameContainer').classList.remove('battle-mode');
+  document.getElementById('startBtn').disabled=true;
+  document.getElementById('shipDock').style.opacity='1';
+
+  for(let r=0;r<GRID_SIZE;r++)for(let c=0;c<GRID_SIZE;c++){
+    const pc=document.createElement('div');pc.className='cell';pc.dataset.row=r;pc.dataset.col=c;
+    pc.onclick=()=>onPlace(r,c);pc.onmouseenter=()=>hoverPreview(pc,r,c,'player');pc.onmouseleave=()=>pc.classList.remove('preview');
+    document.getElementById('playerGrid').appendChild(pc);
+    const ec=document.createElement('div');ec.className='cell';ec.dataset.row=r;ec.dataset.col=c;
+    ec.onclick=()=>onAttack(r,c);
+    document.getElementById('enemyGrid').appendChild(ec);
+  }
+  buildDock();updateUI();
+}
+
+function buildDock(){
+  const dock=document.getElementById('shipDock');
+  Array.from(dock.children).slice(2,-1).forEach(el=>el.remove());
+  SHIPS_DATA.forEach((s,i)=>{
+    const el=document.createElement('div');el.className='ship-option';el.id=`opt${i}`;
+    el.innerHTML=`<span>${SHIP_SVGS[i]()}</span><div><div class="ship-option-name">${s.name}</div><div class="ship-option-size">${s.size}格</div></div>`;
+    el.onclick=()=>pickShip(i);
+    dock.insertBefore(el,dock.lastElementChild);
+  });
+}
+
+function pickShip(i){
+  if(phase!=='placing')return;
+  if(playerShips.some(x=>x.idx===i))return;
+  selectedIdx=i;
+  document.querySelectorAll('.ship-option').forEach((e,j)=>e.classList.toggle('selected',j===i));
+  updateUI();
+}
+
+function toggleRotation(){
+  isHorizontal=!isHorizontal;
+  document.querySelectorAll('.cell.preview').forEach(c=>c.classList.remove('preview'));
+  updateUI();
+}
+
+// ===== 放置 =====
+function canPlace(bd,r,c,sz,h){
+  for(let i=0;i<sz;i++){
+    const rr=h?r:r+i,cc=h?c+i:c;
+    if(rr>=GRID_SIZE||cc>=GRID_SIZE)return false;
+    if(bd[rr][cc]!==null)return false;
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+      const nr=rr+dr,nc=cc+dc;
+      if(nr>=0&&nr<GRID_SIZE&&nc>=0&&nc<GRID_SIZE&&bd[nr][nc]!==null)return false;
+    }
+  }
+  return true;
+}
+
+function doPlace(bd,r,c,sz,h,idx){
+  const cells=[];
+  for(let i=0;i<sz;i++){
+    const rr=h?r:r+i,cc=h?c+i:c;
+    bd[rr][cc]={idx,hit:false};
+    cells.push({row:rr,col:cc});
+  }
+  return cells;
+}
+
+function onPlace(r,c){
+  if(phase!=='placing'||selectedIdx===null)return;
+  const s=SHIPS_DATA[selectedIdx];
+  if(!canPlace(playerBoard,r,c,s.size,isHorizontal)){shakeStatus('❌放不下！换位置');return}
+  const cells=doPlace(playerBoard,r,c,s.size,isHorizontal,selectedIdx);
+  playerShips.push({...s,idx:selectedIdx,cells,sunk:false});
+  document.getElementById(`opt${selectedIdx}`).classList.add('placed');
+  selectedIdx=null;
+  document.querySelectorAll('.ship-option').forEach(e=>e.classList.remove('selected'));
+  renderP();
+  if(playerShips.length===SHIPS_DATA.length){
+    document.getElementById('startBtn').disabled=false;
+    setMsg('✅部署完毕！点击开始战斗');
+  }else pickShip(playerShips.length);
+}
+
+function hoverPreview(cell,r,c,type){
+  if(phase!=='placing'||selectedIdx===null||type!=='player')return;
+  cell.classList.remove('preview');
+  const s=SHIPS_DATA[selectedIdx];
+  if(canPlace(playerBoard,r,c,s.size,isHorizontal)){
+    for(let i=0;i<s.size;i++){
+      const rr=isHorizontal?r:r+i,cc=isHorizontal?c+i:c;
+      const t=document.querySelector(`.player-grid .cell[data-row="${rr}"][data-col="${cc}"]`);
+      if(t)t.classList.add('preview');
+    }
+  }
+}
+
+// ===== 渲染 =====
+function renderP(){
+  document.querySelectorAll('.player-grid .cell').forEach(cell=>{
+    const r=+cell.dataset.row,c=+cell.dataset.col,v=playerBoard[r][c];
+    cell.className='cell';cell.innerHTML='';
+    if(v&&phase==='placing'){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
+    else if(v&&v.hit){cell.classList.add('hit');if(phase!=='placing')cell.innerHTML=SHIP_SVGS[v.idx]()}
+  });
+  playerShips.forEach(s=>{
+    if(s.sunk)s.cells.forEach(p=>{
+      const c=document.querySelector(`.player-grid .cell[data-row="${p.row}"][data-col="${p.col}"]`);
+      if(c)c.classList.add('sunk','sink-effect');
+    });
+  });
+  // 显示敌方打中的miss
+  for(let r=0;r<GRID_SIZE;r++)for(let c=0;c<GRID_SIZE;c++){
+    if(playerBoard[r][c]&&playerBoard[r][c].missed){
+      const cc=document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`);
+      if(cc&&!cc.classList.contains('has-ship'))cc.classList.add('miss');
+    }
+  }
+}
+
+function renderE(){
+  document.querySelectorAll('.enemy-grid .cell').forEach(cell=>{
+    const r=+cell.dataset.row,c=+cell.dataset.col,v=enemyBoard[r][c];
+    cell.className='cell';cell.innerHTML='';
+    if(v&&v.revealed){
+      if(v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+      else cell.classList.add('miss');
+    }
+  });
+  enemyShips.forEach(s=>{
+    if(s.sunk)s.cells.forEach(p=>{
+      const c=document.querySelector(`.enemy-grid .cell[data-row="${p.row}"][data-col="${p.col}"]`);
+      if(c){c.classList.add('sunk','hit');c.innerHTML=SHIP_SVGS[s.idx]()}
+    });
+  });
+}
+
+// ===== 战斗 =====
+function startBattle(){
+  phase='battle';
+  document.getElementById('gameContainer').classList.add('battle-mode');
+  document.getElementById('startBtn').disabled=true;
+  document.getElementById('shipDock').style.opacity='.4';
+
+  // 敌方随机放置
+  SHIPS_DATA.forEach((s,i)=>{
+    let ok=false,tries=0;
+    while(!ok&&tries<500){
+      const h=Math.random()>.5,r=Math.floor(Math.random()*GRID_SIZE),c=Math.floor(Math.random()*GRID_SIZE);
+      if(canPlace(enemyBoard,r,c,s.size,h)){
+        enemyShips.push({...s,idx:i,cells:doPlace(enemyBoard,r,c,s.size,h,i),sunk:false});
+        ok=true;
+      }
+      tries++;
+    }
+  });
+
+  renderP();renderE();
+  setMsg('⚔️战斗开始！点击敌方海域开火！');
+}
+
+function onAttack(r,c){
+  if(phase!=='battle'||!isPlayerTurn)return;
+  const v=enemyBoard[r][c];
+  if(v&&v.revealed)return; // 已点过
+
+  if(!v){
+    // miss
+    enemyBoard[r][c]={revealed:true,hit:false};
+    boom(document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`),false);
+    renderE();
+    setMsg('💨未命中！敌军回合...');
+    isPlayerTurn=false;
+    setTimeout(aiTurn,1200);
+  }else{
+    // hit!
+    v.revealed=true;v.hit=true;
+    v.idx=v.idx!==undefined?v.idx:findShipIndex(enemyShips,v);
+    boom(document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`),true);
+    checkSink(enemyShips,v.idx,true);
+    renderE();
+    if(pSunk>=5){endGame(true);return;}
+    setMsg('💥命中！继续攻击！');
+  }
+}
+
+function findShipIndex(ships,val){
+  for(let i=0;i<ships.length;i++)if(ships[i].cells.some(p=>p.row===val.r&&p.col===val.c))return i;
+  return 0;
+}
+
+function checkSink(ships,idx,side){
+  const s=ships[idx];if(!s||s.sunk)return;
+  if(s.cells.every(p=>enemyBoard[p.row][p.col]&&enemyBoard[p.row][p.col].hit)){
+    s.sunk=true;
+    if(side){pSunk++}else{eSunk++}
+    updScore();
+    setMsg(`🎉${s.name}被击沉！${side?'继续进攻':'危险...'}`);
+  }
+}
+
+// ===== AI =====
+function aiTurn(){
+  if(phase!=='battle')return;
+  const sb=document.getElementById('statusBar');
+  sb.classList.add('thinking');
+
+  setTimeout(()=>{
+    sb.classList.remove('thinking');
+    let r,c;
+
+    if(aiHunt&&aiStack.length>0){
+      let found=false;
+      while(aiStack.length>0&&!found){
+        const t=aiStack.shift();r=t.r;c=t.c;
+        const pv=playerBoard[r][c];
+        if(pv===null||(pv&&!pv.hit))found=true;
+      }
+      if(!found){aiHunt=false;aiLastHit=null;[r,c]=randEmpty();}
+    }else{
+      [r,c]=randEmpty();
+    }
+
+    const pv=playerBoard[r][c];
+
+    if(pv===null){
+      // AI miss
+      playerBoard[r][c]={revealed:true,hit:false,missed:true};
+      boom(document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`),false);
+      renderP();
+      setMsg('💨敌军落空！轮到你！');
+      isPlayerTurn=true;
+    }else if(pv&&!pv.hit){
+      // AI hit
+      pv.hit=true;pv.revealed=true;
+      boom(document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`),true);
+      checkSink(playerShips,pv.idx,false);
+      renderP();
+      if(eSunk>=5){endGame(false);return;}
+
+      // 进入追踪
+      aiHunt=true;aiLastHit={r,c};
+      addAdjacents(r,c);
+
+      setMsg('💥你的船被命中了！敌军继续...');
+      setTimeout(aiTurn,1200); // 连续攻击
+    }
+  },800);
+}
+
+function randEmpty(){
+  let empty=[];
+  for(let r=0;r<GRID_SIZE;r++)for(let c=0;c<GRID_SIZE;c++){
+    const v=playerBoard[r][c];
+    if(v===null||(v&&!v.hit&&!v.missed))empty.push({r,c});
+  }
+  return empty[Math.floor(Math.random()*empty.length)]?[empty[Math.floor(Math.random()*empty.length)].r,empty[Math.floor(Math.random()*empty.length)].c]:[0,0];
+}
+
+function addAdjacents(r,c){
+  [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr,dc])=>{
+    const nr=r+dr,nc=c+dc;
+    if(nr>=0&&nr<GRID_SIZE&&nc>=0&&nc<GRID_SIZE){
+      const v=playerBoard[nr][nc];
+      if(!v||(v&&!v.hit&&!v.revealed)&&!aiStack.some(t=>t.r===nr&&t.c===nc)){
+        aiStack.push({r:nr,c:nc});
+      }
+    }
+  });
+}
+
+// ===== 结束 =====
+function endGame(win){
+  phase='ended';
+  const sb=document.getElementById('statusBar');
+  if(win){sb.className='status-bar win';setMsg('🏆 胜利！你摧毁了全部敌舰！')}
+  else{sb.className='status-bar lose';setMsg('💀 失败...你的舰队全军覆没')}
+}
+
+// ===== UI工具 =====
+function updateUI(){
+  const sb=document.getElementById('statusBar');
+  if(phase==='placing'){
+    sb.className='status-bar placing';
+    if(selectedIdx!==null)setMsg(`已选 ${SHIPS_DATA[selectedIdx].name}（${SHIPS_DATA[selectedIdx].size}格）| 方向:${isHorizontal?'→':'↓'}`)
+    else setMsg('🎯选择左侧船只后点击棋盘放置');
+  }
+  updScore();
+}
+
+function setMsg(t){document.getElementById('statusBar').textContent=t}
+function shakeStatus(msg){
+  const sb=document.getElementById('statusBar');
+  sb.textContent=msg;sb.style.animation='none';void sb.offsetWidth;
+  sb.style.animation='sinkShake .4s ease';setTimeout(()=>updateUI(),800);
+}
+function updScore(){
+  document.getElementById('playerSinks').textContent=`${pSunk} / 5`;
+  document.getElementById('enemySinks').textContent=`${eSunk} / 5`;
+}
+function boom(cell,isHit){
+  if(!cell)return;
+  const ex=document.createElement('div');
+  ex.className='explosion';
+  ex.style.left='50%';ex.style.top='50%';ex.style.transform='translate(-50%,-50%)';
+  ex.style.background=isHit?'radial-gradient(circle,#FF5722,#F44336,transparent)':'radial-gradient(circle,#90CAF9,#42A5F5,transparent)';
+  cell.appendChild(ex);
+  setTimeout(()=>ex.remove(),600);
+}
+
+function resetGame(){init()}
+
+// 键盘快捷键
+document.addEventListener('keydown',e=>{
+  if(e.key==='r'||e.key==='R'||e.code==='Space'){if(phase==='placing'){e.preventDefault();toggleRotation()}}
+});
+
+// 启动
+init();
+</script>
 </body>
 </html>
