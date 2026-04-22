@@ -698,7 +698,7 @@ function init(){
 
   document.getElementById('playerGrid').innerHTML='';
   document.getElementById('enemyGrid').innerHTML='';
-  document.getElementById('gameContainer').classList.remove('battle-mode');
+  document.body.classList.remove('battle-mode');
   document.getElementById('startBtn').disabled=true;
   document.getElementById('shipDock').style.opacity='1';
   
@@ -1174,7 +1174,7 @@ function renderEnemySkills() {
 // ===== 战斗 =====
 function startBattle(){
   phase='battle';
-  document.getElementById('gameContainer').classList.add('battle-mode');
+  document.body.classList.add('battle-mode');
   document.getElementById('startBtn').disabled=true;
   document.getElementById('switchPlayerBtn').style.display = 'none';
   document.getElementById('shipDock').style.opacity='.4';
@@ -1273,49 +1273,160 @@ function executePvpAttack(r, c, targetBoardType) {
   const targetShips = targetBoardType === 'player' ? playerShips : enemyShips;
   const gridSelector = targetBoardType === 'player' ? '.player-grid' : '.enemy-grid';
   
+  const attackerEnergy = isPlayerTurn ? playerShipEnergy : enemyShipEnergy;
+  const defenderEnergy = isPlayerTurn ? enemyShipEnergy : playerShipEnergy;
+  
   const v=targetBoard[r][c];
-  if(v&&v.revealed)return; // 已点过
+  if(v&&v.revealed)return;
 
-  // 齐射模式处理
   const isVolleyMode = currentMode === 'volley';
   const currentPlayer = isPlayerTurn ? '玩家1' : '玩家2';
   
-  if(!v){
-    // miss
-    targetBoard[r][c]={revealed:true,hit:false};
-    boom(document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`),false);
-    
-    if (targetBoardType === 'player') {
-      renderP();
+  const readyShip = getRandomReadyAttackerShip(attackerEnergy);
+  
+  if (readyShip && readyShip.type === 'carrier') {
+    executeCarrierAttack(r, c, targetBoard, targetShips, gridSelector, attackerEnergy, readyShip.idx);
+    setMsg(`💥 ${currentPlayer}${readyShip.name} 发动地毯轰炸！攻击3×3区域！`);
+    if (isPlayerTurn) {
+      renderPlayerSkills();
     } else {
-      renderE();
+      renderEnemySkills();
     }
     
-    if (isVolleyMode) {
-      volleyShotsLeft--;
-      if (volleyShotsLeft <= 0) {
-        // 齐射结束，标记卡牌已使用
-        if (activeCard) activeCard.used = true;
-        currentMode = 'normal';
-        activeCard = null;
-        renderCards();
-        
-        showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
-      } else {
-        setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
+    setTimeout(() => {
+      let anyHit = false;
+      const startRow = Math.max(0, r - 1);
+      const startCol = Math.max(0, c - 1);
+      const endRow = Math.min(GRID_SIZE - 1, r + 1);
+      const endCol = Math.min(GRID_SIZE - 1, c + 1);
+      
+      const sinkType = targetBoardType === 'player' ? 'player2Attacks' : 'player1Attacks';
+      
+      for (let row = startRow; row <= endRow; row++) {
+        for (let col = startCol; col <= endCol; col++) {
+          const cv = targetBoard[row][col];
+          if (cv && cv.hit && cv.idx !== undefined) {
+            checkSink(targetShips, cv.idx, targetBoard, sinkType);
+            anyHit = true;
+          }
+        }
       }
+      
+      if (targetBoardType === 'player') {
+        renderP();
+      } else {
+        renderE();
+      }
+      
+      const player1AllSunk = playerShips.every(s => s.sunk);
+      const player2AllSunk = enemyShips.every(s => s.sunk);
+      
+      if (player1AllSunk) {
+        endGame(false, true);
+        return;
+      }
+      if (player2AllSunk) {
+        endGame(true, true);
+        return;
+      }
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+        } else {
+          setMsg(`💥地毯轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else {
+        showEndTurnButton(anyHit ? `⏭️ ${currentPlayer}地毯轰炸命中！点击"确认回合结束"按钮结束你的回合` : `⏭️ ${currentPlayer}地毯轰炸未命中！点击"确认回合结束"按钮结束你的回合`);
+      }
+    }, 1000);
+    return;
+  }
+  
+  if (readyShip && readyShip.type === 'battleship') {
+    executeBattleshipAttack(r, c, targetBoard, targetShips, gridSelector, attackerEnergy, readyShip.idx);
+    setMsg(`💥 ${currentPlayer}${readyShip.name} 发动范围轰炸！`);
+    if (isPlayerTurn) {
+      renderPlayerSkills();
     } else {
-      showEndTurnButton(`⏭️ ${currentPlayer}未命中！点击"确认回合结束"按钮结束你的回合`);
+      renderEnemySkills();
     }
-  }else{
-    // hit!
-    v.revealed=true;v.hit=true;
-    v.idx=v.idx!==undefined?v.idx:findShipIndex(targetShips,v);
-    boom(document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`),true);
     
-    // 检查是否击沉
+    setTimeout(() => {
+      let anyHit = false;
+      const startRow = Math.max(0, r - 1);
+      const startCol = Math.max(0, c - 1);
+      const endRow = Math.min(GRID_SIZE - 1, r + 1);
+      const endCol = Math.min(GRID_SIZE - 1, c + 1);
+      
+      const sinkType = targetBoardType === 'player' ? 'player2Attacks' : 'player1Attacks';
+      
+      for (let row = startRow; row <= endRow; row++) {
+        for (let col = startCol; col <= endCol; col++) {
+          const cv = targetBoard[row][col];
+          if (cv && cv.hit && cv.idx !== undefined) {
+            checkSink(targetShips, cv.idx, targetBoard, sinkType);
+            anyHit = true;
+          }
+        }
+      }
+      
+      if (targetBoardType === 'player') {
+        renderP();
+      } else {
+        renderE();
+      }
+      
+      const player1AllSunk = playerShips.every(s => s.sunk);
+      const player2AllSunk = enemyShips.every(s => s.sunk);
+      
+      if (player1AllSunk) {
+        endGame(false, true);
+        return;
+      }
+      if (player2AllSunk) {
+        endGame(true, true);
+        return;
+      }
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+        } else {
+          setMsg(`💥范围轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else {
+        showEndTurnButton(anyHit ? `⏭️ ${currentPlayer}范围轰炸命中！点击"确认回合结束"按钮结束你的回合` : `⏭️ ${currentPlayer}范围轰炸未命中！点击"确认回合结束"按钮结束你的回合`);
+      }
+    }, 800);
+    return;
+  }
+  
+  if (readyShip && readyShip.type === 'cruiser') {
+    const cell = document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`);
+    const result = executeCruiserAttack(r, c, targetBoard, targetShips, gridSelector, attackerEnergy, readyShip.idx);
+    setMsg(`💥 ${currentPlayer}${readyShip.name} 发动穿甲打击！必定命中！`);
+    if (isPlayerTurn) {
+      renderPlayerSkills();
+    } else {
+      renderEnemySkills();
+    }
+    
     const sinkType = targetBoardType === 'player' ? 'player2Attacks' : 'player1Attacks';
-    checkSink(targetShips, v.idx, targetBoard, sinkType);
+    
+    if (result.hit) {
+      checkSink(targetShips, result.shipIdx, targetBoard, sinkType);
+    }
     
     if (targetBoardType === 'player') {
       renderP();
@@ -1323,7 +1434,6 @@ function executePvpAttack(r, c, targetBoardType) {
       renderE();
     }
     
-    // 检查游戏是否结束
     const player1AllSunk = playerShips.every(s => s.sunk);
     const player2AllSunk = enemyShips.every(s => s.sunk);
     
@@ -1339,12 +1449,222 @@ function executePvpAttack(r, c, targetBoardType) {
     if (isVolleyMode) {
       volleyShotsLeft--;
       if (volleyShotsLeft <= 0) {
-        // 齐射结束，标记卡牌已使用
         if (activeCard) activeCard.used = true;
         currentMode = 'normal';
         activeCard = null;
         renderCards();
+        showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+      } else {
+        setMsg(`💥穿甲打击！还剩 ${volleyShotsLeft} 次攻击机会`);
+      }
+    } else {
+      showEndTurnButton(result.hit ? `⏭️ ${currentPlayer}穿甲打击命中！点击"确认回合结束"按钮结束你的回合` : `⏭️ ${currentPlayer}穿甲打击未命中！点击"确认回合结束"按钮结束你的回合`);
+    }
+    return;
+  }
+  
+  if (readyShip && readyShip.type === 'patrol') {
+    const cell = document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`);
+    const sinkType = targetBoardType === 'player' ? 'player2Attacks' : 'player1Attacks';
+    
+    if (!v) {
+      targetBoard[r][c] = { revealed: true, hit: false };
+      boom(cell, false);
+      
+      if (targetBoardType === 'player') {
+        renderP();
+      } else {
+        renderE();
+      }
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+        } else {
+          setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else {
+        showEndTurnButton(`⏭️ ${currentPlayer}未命中！点击"确认回合结束"按钮结束你的回合`);
+      }
+    } else {
+      v.revealed = true;
+      v.hit = true;
+      v.idx = v.idx !== undefined ? v.idx : findShipIndex(targetShips, v);
+      boom(cell, true);
+      checkSink(targetShips, v.idx, targetBoard, sinkType);
+      
+      if (targetBoardType === 'player') {
+        renderP();
+      } else {
+        renderE();
+      }
+      
+      const player1AllSunk = playerShips.every(s => s.sunk);
+      const player2AllSunk = enemyShips.every(s => s.sunk);
+      
+      if (player1AllSunk) {
+        endGame(false, true);
+        return;
+      }
+      if (player2AllSunk) {
+        endGame(true, true);
+        return;
+      }
+      
+      if (Math.random() > 0.5) {
+        setMsg(`💥 ${currentPlayer}${readyShip.name} 命中！准备闪电连击...`);
         
+        executePatrolBonusAttack(r, c, targetBoard, targetShips, gridSelector, attackerEnergy, readyShip.idx, (hit, br, bc, bIdx) => {
+          setTimeout(() => {
+            if (hit && bIdx !== undefined) {
+              checkSink(targetShips, bIdx, targetBoard, sinkType);
+            }
+            
+            if (targetBoardType === 'player') {
+              renderP();
+            } else {
+              renderE();
+            }
+            
+            const p1AllSunk = playerShips.every(s => s.sunk);
+            const p2AllSunk = enemyShips.every(s => s.sunk);
+            
+            if (p1AllSunk) {
+              endGame(false, true);
+              return;
+            }
+            if (p2AllSunk) {
+              endGame(true, true);
+              return;
+            }
+            
+            if (isVolleyMode) {
+              volleyShotsLeft--;
+              if (volleyShotsLeft <= 0) {
+                if (activeCard) activeCard.used = true;
+                currentMode = 'normal';
+                activeCard = null;
+                renderCards();
+                showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+              } else {
+                setMsg(hit ? `⚡闪电连击命中！还剩 ${volleyShotsLeft} 次攻击机会` : `⚡闪电连击未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
+              }
+            } else {
+              showEndTurnButton(hit ? `⏭️ ${currentPlayer}闪电连击命中！点击"确认回合结束"按钮结束你的回合` : `⏭️ ${currentPlayer}闪电连击未命中！点击"确认回合结束"按钮结束你的回合`);
+            }
+          }, 500);
+        });
+      } else {
+        if (isVolleyMode) {
+          volleyShotsLeft--;
+          if (volleyShotsLeft <= 0) {
+            if (activeCard) activeCard.used = true;
+            currentMode = 'normal';
+            activeCard = null;
+            renderCards();
+            showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+          } else {
+            setMsg(`💥命中！闪电连击未触发，还剩 ${volleyShotsLeft} 次攻击机会`);
+          }
+        } else {
+          showEndTurnButton(`⏭️ ${currentPlayer}命中！点击"确认回合结束"按钮结束你的回合`);
+        }
+      }
+    }
+    return;
+  }
+  
+  if (!v) {
+    targetBoard[r][c] = { revealed: true, hit: false };
+    boom(document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`), false);
+    
+    if (targetBoardType === 'player') {
+      renderP();
+    } else {
+      renderE();
+    }
+    
+    if (isVolleyMode) {
+      volleyShotsLeft--;
+      if (volleyShotsLeft <= 0) {
+        if (activeCard) activeCard.used = true;
+        currentMode = 'normal';
+        activeCard = null;
+        renderCards();
+        showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+      } else {
+        setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
+      }
+    } else {
+      showEndTurnButton(`⏭️ ${currentPlayer}未命中！点击"确认回合结束"按钮结束你的回合`);
+    }
+  } else {
+    const cell = document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`);
+    v.idx = v.idx !== undefined ? v.idx : findShipIndex(targetShips, v);
+    const sinkType = targetBoardType === 'player' ? 'player2Attacks' : 'player1Attacks';
+    
+    if (checkEscortDodge(v.idx, targetBoard, targetShips, defenderEnergy, cell)) {
+      targetBoard[r][c] = { revealed: true, hit: false, dodged: true };
+      setMsg(`🛡️ ${isPlayerTurn ? '玩家2' : '玩家1'}护卫舰闪避了攻击！`);
+      
+      if (targetBoardType === 'player') {
+        renderP();
+      } else {
+        renderE();
+      }
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
+        } else {
+          setMsg(`🛡️闪避！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else {
+        showEndTurnButton(`⏭️ ${currentPlayer}攻击被闪避！点击"确认回合结束"按钮结束你的回合`);
+      }
+      return;
+    }
+    
+    v.revealed = true;
+    v.hit = true;
+    boom(cell, true);
+    checkSink(targetShips, v.idx, targetBoard, sinkType);
+    
+    if (targetBoardType === 'player') {
+      renderP();
+    } else {
+      renderE();
+    }
+    
+    const player1AllSunk = playerShips.every(s => s.sunk);
+    const player2AllSunk = enemyShips.every(s => s.sunk);
+    
+    if (player1AllSunk) {
+      endGame(false, true);
+      return;
+    }
+    if (player2AllSunk) {
+      endGame(true, true);
+      return;
+    }
+    
+    if (isVolleyMode) {
+      volleyShotsLeft--;
+      if (volleyShotsLeft <= 0) {
+        if (activeCard) activeCard.used = true;
+        currentMode = 'normal';
+        activeCard = null;
+        renderCards();
         showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
       } else {
         setMsg(`💥命中！还剩 ${volleyShotsLeft} 次攻击机会`);
