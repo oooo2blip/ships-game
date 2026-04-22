@@ -123,6 +123,58 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .pvp-mode .battle-mode .player-grid, .pvp-mode .battle-mode .enemy-grid{pointer-events:auto}
 .current-player-indicator{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(255,215,0,.9),rgba(255,165,0,.9));color:#fff;padding:10px 30px;border-radius:25px;font-size:1.1em;font-weight:700;z-index:1000;box-shadow:0 4px 15px rgba(255,215,0,.4);animation:pulseGlow 2s ease-in-out infinite}
 @keyframes pulseGlow{0%,100%{box-shadow:0 4px 15px rgba(255,215,0,.4)}50%{box-shadow:0 4px 25px rgba(255,215,0,.6)}}
+
+/* 船只能量条 */
+.energy-bar-container{position:absolute;bottom:2px;left:2px;right:2px;height:4px;background:rgba(0,0,0,.3);border-radius:2px;overflow:hidden}
+.energy-bar{height:100%;background:linear-gradient(90deg,#FFD700,#FFA500);transition:width .3s ease;border-radius:2px}
+.energy-ready .energy-bar{animation:energyPulse .5s ease-in-out infinite}
+@keyframes energyPulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* 闪电链效果 */
+.lightning-chain{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;pointer-events:none;z-index:15}
+.lightning-segment{position:absolute;background:linear-gradient(90deg,#FFD700,#FFA500);box-shadow:0 0 10px #FFD700,0 0 20px #FFA500;animation:lightningFlash .3s ease-out forwards}
+@keyframes lightningFlash{0%{opacity:1;transform:scale(1)}50%{opacity:.8;transform:scale(1.1)}100%{opacity:0;transform:scale(.8)}}
+
+/* 能量盾效果 */
+.shield-effect{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border:3px solid #42A5F5;border-radius:50%;box-shadow:0 0 20px #42A5F5,inset 0 0 20px rgba(66,165,245,.3);animation:shieldPulse .6s ease-in-out 2}
+@keyframes shieldPulse{0%,100%{transform:translate(-50%,-50%)scale(1);opacity:.8}50%{transform:translate(-50%,-50%)scale(1.2);opacity:1}}
+.shield-blocked{animation:shieldBlocked .5s ease-out}
+@keyframes shieldBlocked{0%{background:rgba(66,165,245,.4);transform:scale(1)}50%{background:rgba(66,165,245,.6);transform:scale(1.1)}100%{background:transparent;transform:scale(1)}}
+
+/* 穿甲光束效果 */
+.pierce-beam{position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:linear-gradient(180deg,#FF5722,#F44336,#D32F2F);box-shadow:0 0 15px #FF5722,0 0 30px #F44336;animation:pierceAnim .5s ease-out forwards;z-index:14}
+@keyframes pierceAnim{0%{height:0;opacity:1}30%{height:100%;opacity:1}100%{height:100%;opacity:0}}
+.pierce-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:800;color:#FF5722;text-shadow:0 0 10px #FF5722,0 2px 4px rgba(0,0,0,.5);animation:pierceTextAnim .6s ease-out forwards;z-index:15}
+@keyframes pierceTextAnim{0%{transform:translate(-50%,-50%)scale(.5);opacity:0}30%{transform:translate(-50%,-50%)scale(1.3);opacity:1}100%{transform:translate(-50%,-50%)scale(1);opacity:0}}
+
+/* 大范围爆炸效果 */
+.wave-explosion{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,#FF9800,#FF5722,transparent);animation:waveExpand .6s ease-out forwards;z-index:12}
+@keyframes waveExpand{0%{transform:translate(-50%,-50%)scale(1);opacity:1}100%{transform:translate(-50%,-50%)scale(4);opacity:0}}
+.shockwave{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border:3px solid #FFA500;border-radius:50%;animation:shockwaveExpand .8s ease-out forwards;z-index:11}
+@keyframes shockwaveExpand{0%{transform:translate(-50%,-50%)scale(.5);opacity:1}100%{transform:translate(-50%,-50%)scale(5);opacity:0}}
+
+/* 蘑菇云爆炸效果 */
+.mushroom-stage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;z-index:12}
+.mushroom-1{width:15px;height:15px;background:radial-gradient(circle,#FFEB3B,#FF9800,#FF5722);animation:mushroomStage1 .8s ease-out forwards}
+@keyframes mushroomStage1{0%{transform:translate(-50%,-50%)scale(.5);opacity:1}50%{transform:translate(-50%,-50%)scale(2);opacity:1}100%{transform:translate(-50%,-50%)scale(3);opacity:.5}}
+.mushroom-2{width:25px;height:25px;background:radial-gradient(circle,#FFA500,#FF5722,#D32F2F);animation:mushroomStage2 1s ease-out .3s forwards;opacity:0}
+@keyframes mushroomStage2{0%{transform:translate(-50%,-50%)scale(.5);opacity:0}50%{transform:translate(-50%,-50%)scale(2.5);opacity:1}100%{transform:translate(-50%,-50%)scale(4);opacity:.3}}
+.mushroom-3{width:35px;height:35px;background:radial-gradient(circle,#FF5722,#D32F2F,#B71C1C);animation:mushroomStage3 1.2s ease-out .6s forwards;opacity:0}
+@keyframes mushroomStage3{0%{transform:translate(-50%,-50%)scale(.5);opacity:0}40%{transform:translate(-50%,-50%)scale(3);opacity:1}100%{transform:translate(-50%,-50%)scale(5);opacity:.2}}
+.mushroom-cloud{position:absolute;top:30%;left:50%;transform:translateX(-50%);width:40px;height:20px;background:radial-gradient(ellipse at center,#FFA500,#FF5722,transparent);border-radius:50%;animation:mushroomCloudRise 1.5s ease-out .8s forwards;opacity:0;z-index:13}
+@keyframes mushroomCloudRise{0%{transform:translateX(-50%)translateY(0)scale(.5);opacity:0}50%{transform:translateX(-50%)translateY(-20px)scale(1.5);opacity:1}100%{transform:translateX(-50%)translateY(-40px)scale(2);opacity:0}}
+
+/* 相邻格子高亮效果 */
+.adjacent-highlight{background:rgba(255,152,0,.5)!important;border-color:#FF9800!important;animation:adjacentPulse .3s ease-in-out 2}
+@keyframes adjacentPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* 3x3区域攻击高亮 */
+.area-attack-cell{background:rgba(255,87,34,.5)!important;border-color:#FF5722!important;animation:areaPulse .2s ease-in-out}
+@keyframes areaPulse{0%{transform:scale(.8)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* 闪避文字效果 */
+.dodge-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:800;color:#42A5F5;text-shadow:0 0 10px #42A5F5,0 2px 4px rgba(0,0,0,.5);animation:dodgeTextAnim .6s ease-out forwards;z-index:15}
+@keyframes dodgeTextAnim{0%{transform:translate(-50%,-50%)scale(.5);opacity:0}30%{transform:translate(-50%,-50%)scale(1.3);opacity:1}100%{transform:translate(-50%,-50%)scale(1);opacity:0}}
 </style>
 </head>
 <body>
@@ -197,9 +249,18 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 <script>
 const GRID_SIZE = 10;
 const SHIPS_DATA = [
-  {name:'巡逻艇',size:2}, {name:'护卫舰',size:3}, {name:'巡洋舰',size:3},
-  {name:'战列舰',size:4}, {name:'航空母舰',size:5}
+  {name:'巡逻艇',size:2,type:'patrol'}, {name:'护卫舰',size:3,type:'escort'}, 
+  {name:'巡洋舰',size:3,type:'cruiser'}, {name:'战列舰',size:4,type:'battleship'}, 
+  {name:'航空母舰',size:5,type:'carrier'}
 ];
+
+const SHIP_SKILLS = {
+  patrol: {name:'闪电连击',desc:'攻击命中后50%概率再攻击相邻格子',maxEnergy:2},
+  escort: {name:'能量护盾',desc:'被攻击时30%概率闪避',maxEnergy:3},
+  cruiser: {name:'穿甲打击',desc:'攻击必定命中，无视闪避',maxEnergy:3},
+  battleship: {name:'轰炸范围',desc:'攻击时额外轰炸上下或左右相邻一格',maxEnergy:4},
+  carrier: {name:'地毯轰炸',desc:'攻击3×3区域内所有目标',maxEnergy:5}
+};
 
 function shipSvgSmall(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M10,38 Q16,44 32,44 Q48,44 54,38 L50,34 L14,34Z"fill="#8B6914"stroke="#5D4E37"stroke-width="1.5"/><rect x="18"y="28"width="28"height="7"rx="2"fill="#A0784C"stroke="#5D4E37"/><line x1="30"y1="28"x2="30"y2="14"stroke="#5D4E37"stroke-width="2"/><polygon points="30,14 42,20 30,20"fill="#C0392B"/></svg>`}
 function shipSvgMedium(){return`<svg class="ship-svg"viewBox="0 0 64 64"><path d="M6,40 Q16,47 32,47 Q48,47 58,40 L53,34 L11,34Z"fill="#8B6914"stroke="#5D4E37"stroke-width="1.5"/><rect x="14"y="27"width="36"height="8"rx="2"fill="#A0784C"stroke="#5D4E37"/><line x1="24"y1="27"x2="24"y2="10"stroke="#5D4E37"stroke-width="2.5"/><line x1="40"y1="27"x2="40"y2="14"stroke="#5D4E37"stroke-width="2"/><polygon points="24,10 38,17 24,17"fill="#C0392B"/><polygon points="40,14 50,19 40,19"fill="#E74C3C"/></svg>`}
@@ -215,6 +276,12 @@ let selectedIdx=null,isHorizontal=true;
 let phase='placing',isPlayerTurn=true;
 let pSunk=0,eSunk=0;
 let aiHunt=false,aiStack=[],aiLastHit=null;
+
+let playerShipEnergy = {};
+let enemyShipEnergy = {};
+let skillMode = null;
+let activeSkillShip = null;
+let skillChainData = null;
 
 // 游戏模式
 let gameMode = null; // 'ai' 或 'pvp'
@@ -545,6 +612,13 @@ function init(){
   playerShips=[];enemyShips=[];selectedIdx=null;isHorizontal=true;
   phase='placing';isPlayerTurn=true;pSunk=0;eSunk=0;
   aiHunt=false;aiStack=[];aiLastHit=null;
+  
+  // 重置能量系统
+  playerShipEnergy = {};
+  enemyShipEnergy = {};
+  skillMode = null;
+  activeSkillShip = null;
+  skillChainData = null;
   
   // 重置双人模式相关变量
   currentPlacingPlayer = 1;
@@ -908,6 +982,52 @@ function renderE(){
   });
 }
 
+function initShipEnergy() {
+  playerShipEnergy = {};
+  enemyShipEnergy = {};
+  
+  playerShips.forEach(ship => {
+    const skill = SHIP_SKILLS[ship.type];
+    playerShipEnergy[ship.idx] = {
+      current: 0,
+      max: skill.maxEnergy,
+      type: ship.type,
+      name: ship.name
+    };
+  });
+  
+  enemyShips.forEach(ship => {
+    const skill = SHIP_SKILLS[ship.type];
+    enemyShipEnergy[ship.idx] = {
+      current: 0,
+      max: skill.maxEnergy,
+      type: ship.type,
+      name: ship.name
+    };
+  });
+}
+
+function accumulateEnergy(ships, energyData) {
+  ships.forEach(ship => {
+    if (!ship.sunk && energyData[ship.idx]) {
+      if (energyData[ship.idx].current < energyData[ship.idx].max) {
+        energyData[ship.idx].current++;
+      }
+    }
+  });
+}
+
+function getReadyShips(energyData) {
+  const ready = [];
+  for (const idx in energyData) {
+    const ed = energyData[idx];
+    if (ed.current >= ed.max) {
+      ready.push({ idx: parseInt(idx), ...ed });
+    }
+  }
+  return ready;
+}
+
 // ===== 战斗 =====
 function startBattle(){
   phase='battle';
@@ -943,7 +1063,10 @@ function startBattle(){
     });
   }
 
-  // 初始化战术卡
+  initShipEnergy();
+  accumulateEnergy(playerShips, playerShipEnergy);
+  accumulateEnergy(enemyShips, enemyShipEnergy);
+  
   initTacticalCards();
 
   renderP();renderE();
@@ -1089,8 +1212,16 @@ function onPvpAttack(r, c, targetBoardType) {
   }
 }
 
+function finishPlayerTurn(showMessage) {
+  if (showMessage) {
+    setMsg('💨未命中！敌军回合...');
+  }
+  accumulateEnergy(enemyShips, enemyShipEnergy);
+  isPlayerTurn = false;
+  setTimeout(aiTurn, 1200);
+}
+
 function onAttack(r,c){
-  // 如果是侦察模式，执行侦察
   if (currentMode === 'scout') {
     executeScout(r, c);
     return;
@@ -1098,56 +1229,272 @@ function onAttack(r,c){
   
   if(phase!=='battle'||!isPlayerTurn)return;
   const v=enemyBoard[r][c];
-  if(v&&v.revealed)return; // 已点过
+  if(v&&v.revealed)return;
 
-  // 齐射模式处理
   const isVolleyMode = currentMode === 'volley';
+  const readyShip = getRandomReadyAttackerShip(playerShipEnergy);
   
-  if(!v){
-    // miss
-    enemyBoard[r][c]={revealed:true,hit:false};
-    boom(document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`),false);
+  if (readyShip && readyShip.type === 'carrier') {
+    executeCarrierAttack(r, c, enemyBoard, enemyShips, '.enemy-grid', playerShipEnergy, readyShip.idx);
+    setMsg(`💥 ${readyShip.name} 发动地毯轰炸！攻击3×3区域！`);
+    
+    setTimeout(() => {
+      let anyHit = false;
+      const startRow = Math.max(0, r - 1);
+      const startCol = Math.max(0, c - 1);
+      const endRow = Math.min(GRID_SIZE - 1, r + 1);
+      const endCol = Math.min(GRID_SIZE - 1, c + 1);
+      
+      for (let row = startRow; row <= endRow; row++) {
+        for (let col = startCol; col <= endCol; col++) {
+          const cv = enemyBoard[row][col];
+          if (cv && cv.hit && cv.idx !== undefined) {
+            checkSink(enemyShips, cv.idx, enemyBoard, 'playerAttacks');
+            anyHit = true;
+          }
+        }
+      }
+      
+      renderE();
+      if (pSunk >= 5) { endGame(true, false); return; }
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          finishPlayerTurn(true);
+        } else {
+          setMsg(`💥地毯轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else if (anyHit) {
+        setMsg('💥地毯轰炸命中！继续攻击！');
+      } else {
+        finishPlayerTurn(true);
+      }
+    }, 1000);
+    return;
+  }
+  
+  if (readyShip && readyShip.type === 'battleship') {
+    const results = executeBattleshipAttack(r, c, enemyBoard, enemyShips, '.enemy-grid', playerShipEnergy, readyShip.idx);
+    setMsg(`💥 ${readyShip.name} 发动范围轰炸！`);
+    
+    setTimeout(() => {
+      let anyHit = false;
+      const startRow = Math.max(0, r - 1);
+      const startCol = Math.max(0, c - 1);
+      const endRow = Math.min(GRID_SIZE - 1, r + 1);
+      const endCol = Math.min(GRID_SIZE - 1, c + 1);
+      
+      for (let row = startRow; row <= endRow; row++) {
+        for (let col = startCol; col <= endCol; col++) {
+          const cv = enemyBoard[row][col];
+          if (cv && cv.hit && cv.idx !== undefined) {
+            checkSink(enemyShips, cv.idx, enemyBoard, 'playerAttacks');
+            anyHit = true;
+          }
+        }
+      }
+      
+      renderE();
+      if (pSunk >= 5) { endGame(true, false); return; }
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          finishPlayerTurn(true);
+        } else {
+          setMsg(`�范围轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else if (anyHit) {
+        setMsg('💥范围轰炸命中！继续攻击！');
+      } else {
+        finishPlayerTurn(true);
+      }
+    }, 800);
+    return;
+  }
+  
+  if (readyShip && readyShip.type === 'cruiser') {
+    const cell = document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`);
+    const result = executeCruiserAttack(r, c, enemyBoard, enemyShips, '.enemy-grid', playerShipEnergy, readyShip.idx);
+    setMsg(`💥 ${readyShip.name} 发动穿甲打击！必定命中！`);
+    
+    if (result.hit) {
+      checkSink(enemyShips, result.shipIdx, enemyBoard, 'playerAttacks');
+    }
+    
+    renderE();
+    if (pSunk >= 5) { endGame(true, false); return; }
+    
+    if (isVolleyMode) {
+      volleyShotsLeft--;
+      if (volleyShotsLeft <= 0) {
+        if (activeCard) activeCard.used = true;
+        currentMode = 'normal';
+        activeCard = null;
+        renderCards();
+        finishPlayerTurn(!result.hit);
+      } else {
+        setMsg(`�穿甲打击！还剩 ${volleyShotsLeft} 次攻击机会`);
+      }
+    } else if (result.hit) {
+      setMsg('�穿甲打击命中！继续攻击！');
+    } else {
+      finishPlayerTurn(true);
+    }
+    return;
+  }
+  
+  if (readyShip && readyShip.type === 'patrol') {
+    const cell = document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`);
+    
+    if (!v) {
+      enemyBoard[r][c] = { revealed: true, hit: false };
+      boom(cell, false);
+      renderE();
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          finishPlayerTurn(true);
+        } else {
+          setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else {
+        finishPlayerTurn(true);
+      }
+    } else {
+      v.revealed = true;
+      v.hit = true;
+      v.idx = v.idx !== undefined ? v.idx : findShipIndex(enemyShips, v);
+      boom(cell, true);
+      checkSink(enemyShips, v.idx, enemyBoard, 'playerAttacks');
+      renderE();
+      
+      if (pSunk >= 5) { endGame(true, false); return; }
+      
+      if (Math.random() > 0.5) {
+        setMsg(`💥 ${readyShip.name} 命中！准备闪电连击...`);
+        
+        executePatrolBonusAttack(r, c, enemyBoard, enemyShips, '.enemy-grid', playerShipEnergy, readyShip.idx, (hit, br, bc, bIdx) => {
+          setTimeout(() => {
+            if (hit && bIdx !== undefined) {
+              checkSink(enemyShips, bIdx, enemyBoard, 'playerAttacks');
+            }
+            renderE();
+            if (pSunk >= 5) { endGame(true, false); return; }
+            
+            if (isVolleyMode) {
+              volleyShotsLeft--;
+              if (volleyShotsLeft <= 0) {
+                if (activeCard) activeCard.used = true;
+                currentMode = 'normal';
+                activeCard = null;
+                renderCards();
+                finishPlayerTurn(!hit);
+              } else {
+                setMsg(hit ? `⚡闪电连击命中！还剩 ${volleyShotsLeft} 次攻击机会` : `⚡闪电连击未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
+              }
+            } else if (hit) {
+              setMsg('⚡闪电连击命中！继续攻击！');
+            } else {
+              setMsg('⚡闪电连击未命中！敌军回合...');
+              finishPlayerTurn(false);
+            }
+          }, 500);
+        });
+      } else {
+        if (isVolleyMode) {
+          volleyShotsLeft--;
+          if (volleyShotsLeft <= 0) {
+            if (activeCard) activeCard.used = true;
+            currentMode = 'normal';
+            activeCard = null;
+            renderCards();
+            finishPlayerTurn(false);
+          } else {
+            setMsg(`💥命中！闪电连击未触发，还剩 ${volleyShotsLeft} 次攻击机会`);
+          }
+        } else {
+          setMsg('💥命中！继续攻击！');
+        }
+      }
+    }
+    return;
+  }
+  
+  if (!v) {
+    enemyBoard[r][c] = { revealed: true, hit: false };
+    boom(document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`), false);
     renderE();
     
     if (isVolleyMode) {
       volleyShotsLeft--;
       if (volleyShotsLeft <= 0) {
-        // 齐射结束，标记卡牌已使用
         if (activeCard) activeCard.used = true;
         currentMode = 'normal';
         activeCard = null;
         renderCards();
-        setMsg('💨齐射结束！未命中！敌军回合...');
-        isPlayerTurn=false;
-        setTimeout(aiTurn,1200);
+        finishPlayerTurn(true);
       } else {
         setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
-      setMsg('💨未命中！敌军回合...');
-      isPlayerTurn=false;
-      setTimeout(aiTurn,1200);
+      finishPlayerTurn(true);
     }
-  }else{
-    // hit!
-    v.revealed=true;v.hit=true;
-    v.idx=v.idx!==undefined?v.idx:findShipIndex(enemyShips,v);
-    boom(document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`),true);
+  } else {
+    const cell = document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`);
+    v.idx = v.idx !== undefined ? v.idx : findShipIndex(enemyShips, v);
+    
+    if (checkEscortDodge(v.idx, enemyBoard, enemyShips, enemyShipEnergy, cell)) {
+      enemyBoard[r][c] = { revealed: true, hit: false, dodged: true };
+      setMsg('🛡️ 敌方护卫舰闪避了攻击！');
+      renderE();
+      
+      if (isVolleyMode) {
+        volleyShotsLeft--;
+        if (volleyShotsLeft <= 0) {
+          if (activeCard) activeCard.used = true;
+          currentMode = 'normal';
+          activeCard = null;
+          renderCards();
+          finishPlayerTurn(true);
+        } else {
+          setMsg(`🛡️闪避！还剩 ${volleyShotsLeft} 次攻击机会`);
+        }
+      } else {
+        finishPlayerTurn(true);
+      }
+      return;
+    }
+    
+    v.revealed = true;
+    v.hit = true;
+    boom(cell, true);
     checkSink(enemyShips, v.idx, enemyBoard, 'playerAttacks');
     renderE();
-    if(pSunk>=5){endGame(true, false);return;}
+    if (pSunk >= 5) { endGame(true, false); return; }
     
     if (isVolleyMode) {
       volleyShotsLeft--;
       if (volleyShotsLeft <= 0) {
-        // 齐射结束，标记卡牌已使用
         if (activeCard) activeCard.used = true;
         currentMode = 'normal';
         activeCard = null;
         renderCards();
-        setMsg('💥齐射结束！命中！敌军回合...');
-        isPlayerTurn=false;
-        setTimeout(aiTurn,1200);
+        finishPlayerTurn(false);
       } else {
         setMsg(`💥命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
@@ -1192,6 +1539,14 @@ function checkSink(ships, idx, targetBoard, sinkType) {
   }
 }
 
+function finishAiTurn(showMessage) {
+  if (showMessage) {
+    setMsg('💨敌军落空！轮到你！');
+  }
+  accumulateEnergy(playerShips, playerShipEnergy);
+  isPlayerTurn = true;
+}
+
 // ===== AI =====
 function aiTurn(){
   if(phase!=='battle')return;
@@ -1201,25 +1556,18 @@ function aiTurn(){
   setTimeout(()=>{
     sb.classList.remove('thinking');
     
-    // AI智能使用战术卡
     const unusedCards = enemyCards.filter(c => !c.used);
     let cardUsed = false;
     
     if (unusedCards.length > 0) {
-      // 决定是否使用战术卡
-      // 如果还在搜索模式（没有找到船），优先使用侦察卡
-      // 如果已经找到船，优先使用齐射卡
-      
       const scoutCard = unusedCards.find(c => c.type === 'SCOUT');
       const volleyCard = unusedCards.find(c => c.type === 'VOLLEY');
       
       if (!aiHunt && scoutCard && Math.random() > 0.5) {
-        // AI使用侦察卡
         scoutCard.used = true;
         cardUsed = true;
         setMsg('🤖 敌方使用了侦察卡！');
         
-        // AI随机选择一个3×3区域进行侦察
         const centerRow = Math.floor(Math.random() * GRID_SIZE);
         const centerCol = Math.floor(Math.random() * GRID_SIZE);
         
@@ -1228,14 +1576,12 @@ function aiTurn(){
         const endRow = Math.min(GRID_SIZE - 1, centerRow + 1);
         const endCol = Math.min(GRID_SIZE - 1, centerCol + 1);
         
-        // 记录侦察结果（虽然玩家看不到，但AI可以利用这些信息）
         let foundShips = 0;
         for (let r = startRow; r <= endRow; r++) {
           for (let c = startCol; c <= endCol; c++) {
             const v = playerBoard[r][c];
             if (v && v.idx !== undefined && !v.hit && !v.missed) {
               foundShips++;
-              // AI将这些位置加入攻击队列
               if (!aiStack.some(t => t.r === r && t.c === c)) {
                 aiStack.push({r, c});
               }
@@ -1251,24 +1597,18 @@ function aiTurn(){
         }
         
         renderCards();
-        
-        // AI继续攻击
         setTimeout(aiTurn, 1200);
         return;
       } else if (aiHunt && volleyCard && Math.random() > 0.4) {
-        // AI使用齐射卡
         volleyCard.used = true;
         cardUsed = true;
         setMsg('🤖 敌方使用了齐射卡！将连续攻击2次！');
         renderCards();
-        
-        // 执行第一次攻击
         executeAiVolleyAttack(2);
         return;
       }
     }
     
-    // 正常攻击逻辑
     let r,c;
 
     if(aiHunt&&aiStack.length>0){
@@ -1283,29 +1623,188 @@ function aiTurn(){
       [r,c]=randEmpty();
     }
 
-    const pv=playerBoard[r][c];
+    const readyShip = getRandomReadyAttackerShip(enemyShipEnergy);
+    
+    if (readyShip && readyShip.type === 'carrier') {
+      setMsg(`🤖 敌方${readyShip.name}发动地毯轰炸！`);
+      executeCarrierAttack(r, c, playerBoard, playerShips, '.player-grid', enemyShipEnergy, readyShip.idx);
+      
+      setTimeout(() => {
+        let anyHit = false;
+        const startRow = Math.max(0, r - 1);
+        const startCol = Math.max(0, c - 1);
+        const endRow = Math.min(GRID_SIZE - 1, r + 1);
+        const endCol = Math.min(GRID_SIZE - 1, c + 1);
+        
+        for (let row = startRow; row <= endRow; row++) {
+          for (let col = startCol; col <= endCol; col++) {
+            const cv = playerBoard[row][col];
+            if (cv && cv.hit && cv.idx !== undefined) {
+              checkSink(playerShips, cv.idx, playerBoard, 'enemyAttacks');
+              anyHit = true;
+              aiHunt = true;
+              aiLastHit = { r: row, c: col };
+              addAdjacents(row, col);
+            }
+          }
+        }
+        
+        renderP();
+        if (eSunk >= 5) { endGame(false, false); return; }
+        
+        if (anyHit) {
+          setMsg('💥地毯轰炸命中！敌军继续攻击...');
+          setTimeout(aiTurn, 1200);
+        } else {
+          finishAiTurn(true);
+        }
+      }, 1000);
+      return;
+    }
+    
+    if (readyShip && readyShip.type === 'battleship') {
+      setMsg(`🤖 敌方${readyShip.name}发动范围轰炸！`);
+      executeBattleshipAttack(r, c, playerBoard, playerShips, '.player-grid', enemyShipEnergy, readyShip.idx);
+      
+      setTimeout(() => {
+        let anyHit = false;
+        const startRow = Math.max(0, r - 1);
+        const startCol = Math.max(0, c - 1);
+        const endRow = Math.min(GRID_SIZE - 1, r + 1);
+        const endCol = Math.min(GRID_SIZE - 1, c + 1);
+        
+        for (let row = startRow; row <= endRow; row++) {
+          for (let col = startCol; col <= endCol; col++) {
+            const cv = playerBoard[row][col];
+            if (cv && cv.hit && cv.idx !== undefined) {
+              checkSink(playerShips, cv.idx, playerBoard, 'enemyAttacks');
+              anyHit = true;
+              aiHunt = true;
+              aiLastHit = { r: row, c: col };
+              addAdjacents(row, col);
+            }
+          }
+        }
+        
+        renderP();
+        if (eSunk >= 5) { endGame(false, false); return; }
+        
+        if (anyHit) {
+          setMsg('💥范围轰炸命中！敌军继续攻击...');
+          setTimeout(aiTurn, 1200);
+        } else {
+          finishAiTurn(true);
+        }
+      }, 800);
+      return;
+    }
+    
+    if (readyShip && readyShip.type === 'cruiser') {
+      setMsg(`🤖 敌方${readyShip.name}发动穿甲打击！必定命中！`);
+      const result = executeCruiserAttack(r, c, playerBoard, playerShips, '.player-grid', enemyShipEnergy, readyShip.idx);
+      
+      if (result.hit) {
+        checkSink(playerShips, result.shipIdx, playerBoard, 'enemyAttacks');
+        aiHunt = true;
+        aiLastHit = { r, c };
+        addAdjacents(r, c);
+      }
+      
+      renderP();
+      if (eSunk >= 5) { endGame(false, false); return; }
+      
+      if (result.hit) {
+        setMsg('💥穿甲打击命中！敌军继续攻击...');
+        setTimeout(aiTurn, 1200);
+      } else {
+        finishAiTurn(true);
+      }
+      return;
+    }
+    
+    if (readyShip && readyShip.type === 'patrol') {
+      const cell = document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`);
+      const pv = playerBoard[r][c];
+      
+      if (pv === null) {
+        playerBoard[r][c] = { revealed: true, hit: false, missed: true };
+        boom(cell, false);
+        renderP();
+        finishAiTurn(true);
+      } else if (pv && !pv.hit) {
+        pv.hit = true;
+        pv.revealed = true;
+        pv.idx = pv.idx !== undefined ? pv.idx : findShipIndex(playerShips, pv);
+        boom(cell, true);
+        checkSink(playerShips, pv.idx, playerBoard, 'enemyAttacks');
+        renderP();
+        if (eSunk >= 5) { endGame(false, false); return; }
+        
+        aiHunt = true;
+        aiLastHit = { r, c };
+        addAdjacents(r, c);
+        
+        if (Math.random() > 0.5) {
+          setMsg(`💥敌方${readyShip.name}命中！准备闪电连击...`);
+          
+          executePatrolBonusAttack(r, c, playerBoard, playerShips, '.player-grid', enemyShipEnergy, readyShip.idx, (hit, br, bc, bIdx) => {
+            setTimeout(() => {
+              if (hit && bIdx !== undefined) {
+                checkSink(playerShips, bIdx, playerBoard, 'enemyAttacks');
+                aiHunt = true;
+                aiLastHit = { r: br, c: bc };
+                addAdjacents(br, bc);
+              }
+              renderP();
+              if (eSunk >= 5) { endGame(false, false); return; }
+              
+              if (hit) {
+                setMsg('⚡闪电连击命中！敌军继续攻击...');
+                setTimeout(aiTurn, 1200);
+              } else {
+                setMsg('⚡闪电连击未命中！轮到你！');
+                finishAiTurn(false);
+              }
+            }, 500);
+          });
+        } else {
+          setMsg('💥你的船被命中了！敌军继续...');
+          setTimeout(aiTurn, 1200);
+        }
+      }
+      return;
+    }
+
+    const cell = document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`);
+    const pv = playerBoard[r][c];
 
     if(pv===null){
-      // AI miss
       playerBoard[r][c]={revealed:true,hit:false,missed:true};
-      boom(document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`),false);
+      boom(cell, false);
       renderP();
-      setMsg('💨敌军落空！轮到你！');
-      isPlayerTurn=true;
+      finishAiTurn(true);
     }else if(pv&&!pv.hit){
-      // AI hit
+      pv.idx = pv.idx !== undefined ? pv.idx : findShipIndex(playerShips, pv);
+      
+      if (checkEscortDodge(pv.idx, playerBoard, playerShips, playerShipEnergy, cell)) {
+        playerBoard[r][c] = { revealed: true, hit: false, missed: true, dodged: true };
+        setMsg('🛡️ 你的护卫舰闪避了攻击！');
+        renderP();
+        finishAiTurn(true);
+        return;
+      }
+      
       pv.hit=true;pv.revealed=true;
-      boom(document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`),true);
+      boom(cell,true);
       checkSink(playerShips, pv.idx, playerBoard, 'enemyAttacks');
       renderP();
       if(eSunk>=5){endGame(false, false);return;}
 
-      // 进入追踪
       aiHunt=true;aiLastHit={r,c};
       addAdjacents(r,c);
 
       setMsg('💥你的船被命中了！敌军继续...');
-      setTimeout(aiTurn,1200); // 连续攻击
+      setTimeout(aiTurn,1200);
     }
   },800);
 }
@@ -1465,6 +1964,366 @@ function boom(cell,isHit){
   ex.style.background=isHit?'radial-gradient(circle,#FF5722,#F44336,transparent)':'radial-gradient(circle,#90CAF9,#42A5F5,transparent)';
   cell.appendChild(ex);
   setTimeout(()=>ex.remove(),600);
+}
+
+function showLightningEffect(fromCell, toCell) {
+  if (!fromCell || !toCell) return;
+  
+  const fromRect = fromCell.getBoundingClientRect();
+  const toRect = toCell.getBoundingClientRect();
+  
+  const gridWrapper = fromCell.closest('.grid-wrapper');
+  const wrapperRect = gridWrapper.getBoundingClientRect();
+  
+  const lightning = document.createElement('div');
+  lightning.className = 'lightning-chain';
+  lightning.style.position = 'absolute';
+  lightning.style.left = (fromRect.left - wrapperRect.left) + 'px';
+  lightning.style.top = (fromRect.top - wrapperRect.top) + 'px';
+  lightning.style.width = (toRect.left - fromRect.left) + 'px';
+  lightning.style.height = (toRect.top - fromRect.top) + 'px';
+  
+  const segment = document.createElement('div');
+  segment.className = 'lightning-segment';
+  segment.style.width = '100%';
+  segment.style.height = '3px';
+  segment.style.top = '50%';
+  segment.style.left = '50%';
+  segment.style.transform = 'translate(-50%, -50%)';
+  
+  const angle = Math.atan2(toRect.top - fromRect.top, toRect.left - fromRect.left);
+  segment.style.transform = `translate(-50%, -50%) rotate(${angle}rad)`;
+  
+  lightning.appendChild(segment);
+  gridWrapper.appendChild(lightning);
+  
+  setTimeout(() => lightning.remove(), 400);
+}
+
+function showShieldEffect(cell) {
+  if (!cell) return;
+  
+  const shield = document.createElement('div');
+  shield.className = 'shield-effect';
+  cell.appendChild(shield);
+  
+  const dodgeText = document.createElement('div');
+  dodgeText.className = 'dodge-text';
+  dodgeText.textContent = '闪避！';
+  cell.appendChild(dodgeText);
+  
+  cell.classList.add('shield-blocked');
+  
+  setTimeout(() => {
+    shield.remove();
+    dodgeText.remove();
+    cell.classList.remove('shield-blocked');
+  }, 600);
+}
+
+function showPierceEffect(cell) {
+  if (!cell) return;
+  
+  const beam = document.createElement('div');
+  beam.className = 'pierce-beam';
+  cell.appendChild(beam);
+  
+  const text = document.createElement('div');
+  text.className = 'pierce-text';
+  text.textContent = '穿透！';
+  cell.appendChild(text);
+  
+  setTimeout(() => {
+    beam.remove();
+    text.remove();
+  }, 600);
+}
+
+function showWaveExplosion(cell) {
+  if (!cell) return;
+  
+  const wave = document.createElement('div');
+  wave.className = 'wave-explosion';
+  cell.appendChild(wave);
+  
+  const shock = document.createElement('div');
+  shock.className = 'shockwave';
+  cell.appendChild(shock);
+  
+  setTimeout(() => {
+    wave.remove();
+    shock.remove();
+  }, 800);
+}
+
+function showMushroomExplosion(cell) {
+  if (!cell) return;
+  
+  const m1 = document.createElement('div');
+  m1.className = 'mushroom-stage mushroom-1';
+  cell.appendChild(m1);
+  
+  const m2 = document.createElement('div');
+  m2.className = 'mushroom-stage mushroom-2';
+  cell.appendChild(m2);
+  
+  const m3 = document.createElement('div');
+  m3.className = 'mushroom-stage mushroom-3';
+  cell.appendChild(m3);
+  
+  const cloud = document.createElement('div');
+  cloud.className = 'mushroom-cloud';
+  cell.appendChild(cloud);
+  
+  setTimeout(() => {
+    m1.remove();
+    m2.remove();
+    m3.remove();
+    cloud.remove();
+  }, 2000);
+}
+
+function highlightAdjacentCells(cells, gridSelector) {
+  cells.forEach(pos => {
+    const cell = document.querySelector(`${gridSelector} .cell[data-row="${pos.r}"][data-col="${pos.c}"]`);
+    if (cell) {
+      cell.classList.add('adjacent-highlight');
+      setTimeout(() => cell.classList.remove('adjacent-highlight'), 600);
+    }
+  });
+}
+
+function getRandomReadyAttackerShip(energyData) {
+  const attackTypes = ['patrol', 'cruiser', 'battleship', 'carrier'];
+  const readyShips = [];
+  
+  for (const idx in energyData) {
+    const ed = energyData[idx];
+    if (ed.current >= ed.max && attackTypes.includes(ed.type)) {
+      readyShips.push({ idx: parseInt(idx), ...ed });
+    }
+  }
+  
+  if (readyShips.length === 0) return null;
+  
+  const typePriority = ['carrier', 'battleship', 'cruiser', 'patrol'];
+  for (const type of typePriority) {
+    const ship = readyShips.find(s => s.type === type);
+    if (ship) return ship;
+  }
+  
+  return readyShips[Math.floor(Math.random() * readyShips.length)];
+}
+
+function checkEscortDodge(attackedShipIdx, targetBoard, targetShips, energyData, cell) {
+  if (attackedShipIdx === undefined) return false;
+  
+  const targetShip = targetShips[attackedShipIdx];
+  if (!targetShip || targetShip.type !== 'escort') return false;
+  
+  const energy = energyData[attackedShipIdx];
+  if (!energy || energy.current < energy.max) return false;
+  
+  if (Math.random() > 0.3) return false;
+  
+  energy.current = 0;
+  
+  showShieldEffect(cell);
+  
+  return true;
+}
+
+function executeCruiserAttack(r, c, targetBoard, targetShips, gridSelector, energyData, shipIdx) {
+  const v = targetBoard[r][c];
+  
+  if (energyData[shipIdx]) {
+    energyData[shipIdx].current = 0;
+  }
+  
+  const cell = document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`);
+  showPierceEffect(cell);
+  
+  if (!v) {
+    targetBoard[r][c] = { revealed: true, hit: false };
+    boom(cell, false);
+    return { hit: false, isMiss: true };
+  }
+  
+  v.revealed = true;
+  v.hit = true;
+  v.idx = v.idx !== undefined ? v.idx : findShipIndex(targetShips, v);
+  
+  boom(cell, true);
+  
+  return { hit: true, shipIdx: v.idx };
+}
+
+function executeBattleshipAttack(r, c, targetBoard, targetShips, gridSelector, energyData, shipIdx) {
+  if (energyData[shipIdx]) {
+    energyData[shipIdx].current = 0;
+  }
+  
+  const mainCell = document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`);
+  showWaveExplosion(mainCell);
+  
+  const isHorizontal = Math.random() > 0.5;
+  const adjacentCells = [];
+  
+  if (isHorizontal) {
+    if (c > 0) adjacentCells.push({ r, c: c - 1 });
+    if (c < GRID_SIZE - 1) adjacentCells.push({ r, c: c + 1 });
+  } else {
+    if (r > 0) adjacentCells.push({ r: r - 1, c });
+    if (r < GRID_SIZE - 1) adjacentCells.push({ r: r + 1, c });
+  }
+  
+  const results = [];
+  
+  const v = targetBoard[r][c];
+  if (!v) {
+    targetBoard[r][c] = { revealed: true, hit: false };
+    boom(mainCell, false);
+    results.push({ hit: false, isMiss: true, r, c });
+  } else {
+    v.revealed = true;
+    v.hit = true;
+    v.idx = v.idx !== undefined ? v.idx : findShipIndex(targetShips, v);
+    boom(mainCell, true);
+    results.push({ hit: true, shipIdx: v.idx, r, c });
+  }
+  
+  adjacentCells.forEach(adj => {
+    const adjCell = document.querySelector(`${gridSelector} .cell[data-row="${adj.r}"][data-col="${adj.c}"]`);
+    const adjV = targetBoard[adj.r][adj.c];
+    
+    if (adjV && adjV.revealed) return;
+    
+    setTimeout(() => {
+      if (adjCell) {
+        showWaveExplosion(adjCell);
+        
+        if (!adjV) {
+          targetBoard[adj.r][adj.c] = { revealed: true, hit: false };
+          boom(adjCell, false);
+        } else {
+          adjV.revealed = true;
+          adjV.hit = true;
+          adjV.idx = adjV.idx !== undefined ? adjV.idx : findShipIndex(targetShips, adjV);
+          boom(adjCell, true);
+          results.push({ hit: true, shipIdx: adjV.idx, r: adj.r, c: adj.c });
+        }
+      }
+    }, 200);
+  });
+  
+  highlightAdjacentCells(adjacentCells, gridSelector);
+  
+  return results;
+}
+
+function executeCarrierAttack(r, c, targetBoard, targetShips, gridSelector, energyData, shipIdx) {
+  if (energyData[shipIdx]) {
+    energyData[shipIdx].current = 0;
+  }
+  
+  const startRow = Math.max(0, r - 1);
+  const startCol = Math.max(0, c - 1);
+  const endRow = Math.min(GRID_SIZE - 1, r + 1);
+  const endCol = Math.min(GRID_SIZE - 1, c + 1);
+  
+  const results = [];
+  const allCells = [];
+  
+  for (let row = startRow; row <= endRow; row++) {
+    for (let col = startCol; col <= endCol; col++) {
+      allCells.push({ r: row, c: col });
+    }
+  }
+  
+  const centerCell = document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`);
+  if (centerCell) {
+    showMushroomExplosion(centerCell);
+  }
+  
+  let delay = 0;
+  allCells.forEach(pos => {
+    const cell = document.querySelector(`${gridSelector} .cell[data-row="${pos.r}"][data-col="${pos.c}"]`);
+    const v = targetBoard[pos.r][pos.c];
+    
+    if (v && v.revealed) return;
+    
+    setTimeout(() => {
+      if (cell) {
+        cell.classList.add('area-attack-cell');
+        setTimeout(() => cell.classList.remove('area-attack-cell'), 500);
+        
+        if (!v) {
+          targetBoard[pos.r][pos.c] = { revealed: true, hit: false };
+          boom(cell, false);
+        } else {
+          v.revealed = true;
+          v.hit = true;
+          v.idx = v.idx !== undefined ? v.idx : findShipIndex(targetShips, v);
+          boom(cell, true);
+          results.push({ hit: true, shipIdx: v.idx, r: pos.r, c: pos.c });
+        }
+      }
+    }, delay);
+    delay += 150;
+  });
+  
+  return results;
+}
+
+function executePatrolBonusAttack(firstHitR, firstHitC, targetBoard, targetShips, gridSelector, energyData, shipIdx, callback) {
+  if (energyData[shipIdx]) {
+    energyData[shipIdx].current = 0;
+  }
+  
+  const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+  const validTargets = [];
+  
+  directions.forEach(([dr, dc]) => {
+    const nr = firstHitR + dr;
+    const nc = firstHitC + dc;
+    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+      const v = targetBoard[nr][nc];
+      if (!v || (v && !v.revealed)) {
+        validTargets.push({ r: nr, c: nc });
+      }
+    }
+  });
+  
+  if (validTargets.length === 0) {
+    if (callback) callback(false);
+    return;
+  }
+  
+  const target = validTargets[Math.floor(Math.random() * validTargets.length)];
+  
+  const fromCell = document.querySelector(`${gridSelector} .cell[data-row="${firstHitR}"][data-col="${firstHitC}"]`);
+  const toCell = document.querySelector(`${gridSelector} .cell[data-row="${target.r}"][data-col="${target.c}"]`);
+  
+  setTimeout(() => {
+    if (fromCell && toCell) {
+      showLightningEffect(fromCell, toCell);
+    }
+    
+    const v = targetBoard[target.r][target.c];
+    const cell = toCell;
+    
+    if (!v) {
+      targetBoard[target.r][target.c] = { revealed: true, hit: false };
+      if (cell) boom(cell, false);
+      if (callback) callback(false, target.r, target.c);
+    } else {
+      v.revealed = true;
+      v.hit = true;
+      v.idx = v.idx !== undefined ? v.idx : findShipIndex(targetShips, v);
+      if (cell) boom(cell, true);
+      if (callback) callback(true, target.r, target.c, v.idx);
+    }
+  }, 300);
 }
 
 function resetGame(){init()}
