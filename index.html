@@ -242,6 +242,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
     <div class="board-panel">
       <div class="board-label" id="enemyBoardLabel">🎯 敌方海域</div>
       <div class="grid-wrapper"><div class="grid enemy-grid" id="enemyGrid"></div></div>
+      <div class="skills-panel" id="enemySkillsPanel" style="display:none">
+        <div class="skills-panel-title">🛠️ 玩家2技能</div>
+      </div>
     </div>
   </div>
 
@@ -1121,21 +1124,21 @@ const SKILL_ICONS = {
   carrier: '🔥'
 };
 
-function renderPlayerSkills() {
-  const panel = document.getElementById('playerSkillsPanel');
+function renderSkills(ships, energyData, panelId) {
+  const panel = document.getElementById(panelId);
   if (!panel) return;
   
   const titleEl = panel.querySelector('.skills-panel-title');
   panel.innerHTML = '';
   if (titleEl) panel.appendChild(titleEl);
   
-  const sortedShips = [...playerShips].sort((a, b) => {
+  const sortedShips = [...ships].sort((a, b) => {
     const order = ['carrier', 'battleship', 'cruiser', 'escort', 'patrol'];
     return order.indexOf(a.type) - order.indexOf(b.type);
   });
   
   sortedShips.forEach(ship => {
-    const energy = playerShipEnergy[ship.idx];
+    const energy = energyData[ship.idx];
     if (!energy) return;
     
     const skill = SHIP_SKILLS[ship.type];
@@ -1158,6 +1161,14 @@ function renderPlayerSkills() {
     
     panel.appendChild(skillCard);
   });
+}
+
+function renderPlayerSkills() {
+  renderSkills(playerShips, playerShipEnergy, 'playerSkillsPanel');
+}
+
+function renderEnemySkills() {
+  renderSkills(enemyShips, enemyShipEnergy, 'enemySkillsPanel');
 }
 
 // ===== 战斗 =====
@@ -1203,12 +1214,15 @@ function startBattle(){
 
   renderP();renderE();
   renderPlayerSkills();
-  
-  document.getElementById('playerSkillsPanel').style.display = 'flex';
+  renderEnemySkills();
   
   if (gameMode === 'ai') {
+    document.getElementById('playerSkillsPanel').style.display = 'flex';
+    document.getElementById('enemySkillsPanel').style.display = 'none';
     setMsg('⚔️战斗开始！点击敌方海域开火，或使用战术卡！');
   } else {
+    document.getElementById('playerSkillsPanel').style.display = 'flex';
+    document.getElementById('enemySkillsPanel').style.display = 'flex';
     setMsg('⚔️战斗开始！玩家1先攻击！');
   }
 }
@@ -1396,6 +1410,15 @@ function endTurn() {
   if (gameMode === 'ai') {
     finishPlayerTurn(true);
   } else {
+    if (isPlayerTurn) {
+      accumulateEnergy(enemyShips, enemyShipEnergy);
+    } else {
+      accumulateEnergy(playerShips, playerShipEnergy);
+    }
+    
+    renderPlayerSkills();
+    renderEnemySkills();
+    
     isPlayerTurn = !isPlayerTurn;
     hideEndTurnButton();
     if (isPlayerTurn) {
