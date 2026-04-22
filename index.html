@@ -22,6 +22,8 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .cell{width:48px;height:48px;background:rgba(135,206,250,.45);border:1.5px solid rgba(255,255,255,.22);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.5em;transition:all .15s ease;position:relative}
 .cell:hover{background:rgba(255,255,255,.35);transform:scale(1.06);z-index:2}
 .cell.has-ship{background:rgba(139,105,65,.55);border-color:rgba(101,75,48,.5)}
+.cell.preview{background:rgba(76,175,80,.6);border-color:#4CAF50;box-shadow:0 0 10px rgba(76,175,80,.5);z-index:2}
+.cell.preview-invalid{background:rgba(244,67,54,.4);border-color:#F44336;box-shadow:0 0 10px rgba(244,67,54,.3);z-index:2}
 .cell.hit{background:rgba(244,67,54,.7)!important;border-color:#c62828;animation:hitPulse .4s ease}
 @keyframes hitPulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
 .cell.miss{background:rgba(255,255,255,.25)!important}
@@ -167,6 +169,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
   <div class="controls" id="controls">
     <button class="btn btn-secondary" onclick="toggleRotation()">🔄 旋转方向</button>
+    <button class="btn btn-secondary" id="undoBtn" onclick="undoPlacement()" disabled>↩️ 撤回</button>
     <button class="btn btn-primary" id="switchPlayerBtn" onclick="switchPlayer()" style="display:none">🔄 切换玩家</button>
     <button class="btn btn-primary" id="startBtn" onclick="startBattle()" disabled>⚔️ 开始战斗！</button>
     <button class="btn btn-danger" onclick="resetGame()">🔄 重新开始</button>
@@ -218,6 +221,10 @@ let gameMode = null; // 'ai' 或 'pvp'
 let currentPlacingPlayer = 1; // 1 或 2（只在PVP模式的放置阶段使用）
 let player2Board = [];
 let player2Ships = [];
+
+// 放置历史记录（用于撤回功能）
+let placementHistory = []; // 玩家1的放置历史
+let placementHistoryP2 = []; // 玩家2的放置历史（双人模式）
 
 // 战术卡系统
 const CARD_TYPES = {
@@ -544,6 +551,10 @@ function init(){
   player2Board = [];
   player2Ships = [];
   
+  // 重置放置历史记录
+  placementHistory = [];
+  placementHistoryP2 = [];
+  
   // 重置战术卡
   playerCards = [];
   enemyCards = [];
@@ -623,8 +634,72 @@ function pickShip(i){
 
 function toggleRotation(){
   isHorizontal=!isHorizontal;
-  document.querySelectorAll('.cell.preview').forEach(c=>c.classList.remove('preview'));
+  // 清除所有预览
+  document.querySelectorAll('.cell.preview, .cell.preview-invalid').forEach(c=>c.classList.remove('preview', 'preview-invalid'));
   updateUI();
+}
+
+// 撤回已放置的船只
+function undoPlacement(){
+  if(phase!=='placing')return;
+  
+  // 确定当前玩家的历史记录
+  let currentHistory = placementHistory;
+  let targetBoard = playerBoard;
+  let targetShips = playerShips;
+  
+  if (gameMode === 'pvp') {
+    if (currentPlacingPlayer === 2) {
+      currentHistory = placementHistoryP2;
+      targetBoard = enemyBoard;
+      targetShips = enemyShips;
+    }
+  }
+  
+  // 检查是否有可撤回的放置
+  if (currentHistory.length === 0) {
+    shakeStatus('❌ 没有可撤回的放置');
+    return;
+  }
+  
+  // 从历史中获取最后一个放置
+  const lastPlacement = currentHistory.pop();
+  
+  // 从棋盘上移除船只
+  lastPlacement.cells.forEach(cell => {
+    targetBoard[cell.row][cell.col] = null;
+  });
+  
+  // 从船只列表中移除
+  const shipIndex = targetShips.findIndex(s => s.idx === lastPlacement.idx);
+  if (shipIndex !== -1) {
+    targetShips.splice(shipIndex, 1);
+  }
+  
+  // 恢复船坞中的船只选项
+  const shipOption = document.getElementById(`opt${lastPlacement.idx}`);
+  if (shipOption) {
+    shipOption.classList.remove('placed');
+  }
+  
+  // 选择刚撤回的船只，方便用户重新放置
+  pickShip(lastPlacement.idx);
+  
+  // 恢复方向为放置时的方向
+  isHorizontal = lastPlacement.isHorizontal;
+  
+  // 渲染棋盘
+  if (lastPlacement.boardType === 'player') {
+    renderP();
+  } else {
+    renderE();
+  }
+  
+  // 更新UI
+  updateUI();
+  
+  // 显示撤回成功消息
+  setMsg(`↩️ 已撤回 ${SHIPS_DATA[lastPlacement.idx].name} 的放置`);
 }
 
 // ===== 放置 =====
@@ -681,7 +756,31 @@ function onPlace(r,c,boardType){
   
   if(!canPlace(targetBoard,r,c,s.size,isHorizontal)){shakeStatus('❌放不下！换位置');return}
   const cells=doPlace(targetBoard,r,c,s.size,isHorizontal,selectedIdx);
-  targetShips.push({...s,idx:selectedIdx,cells,sunk:false});
+  const shipData = {...s,idx:selectedIdx,cells,sunk:false};
+  targetShips.push(shipData);
+  
+  // 记录到放置历史
+  const historyEntry = {
+    idx: selectedIdx,
+    row: r,
+    col: c,
+    isHorizontal: isHorizontal,
+    size: s.size,
+    cells: cells,
+    boardType: boardType,
+    shipData: shipData
+  };
+  
+  if (gameMode === 'pvp') {
+    if (currentPlacingPlayer === 1) {
+      placementHistory.push(historyEntry);
+    } else {
+      placementHistoryP2.push(historyEntry);
+    }
+  } else {
+    placementHistory.push(historyEntry);
+  }
+  
   document.getElementById(`opt${selectedIdx}`).classList.add('placed');
   selectedIdx=null;
   document.querySelectorAll('.ship-option').forEach(e=>e.classList.remove('selected'));
@@ -725,16 +824,24 @@ function hoverPreview(cell,r,c,type){
     if (currentPlacingPlayer === 2 && type !== 'enemy') return;
   }
   
-  cell.classList.remove('preview');
+  // 清除之前的所有预览
+  const gridSelector = type === 'player' ? '.player-grid' : '.enemy-grid';
+  document.querySelectorAll(`${gridSelector} .cell.preview, ${gridSelector} .cell.preview-invalid`).forEach(c => {
+    c.classList.remove('preview', 'preview-invalid');
+  });
+  
   const s=SHIPS_DATA[selectedIdx];
   const targetBoard = type === 'player' ? playerBoard : enemyBoard;
-  const gridSelector = type === 'player' ? '.player-grid' : '.enemy-grid';
+  const isValidPlacement = canPlace(targetBoard, r, c, s.size, isHorizontal);
+  const previewClass = isValidPlacement ? 'preview' : 'preview-invalid';
   
-  if(canPlace(targetBoard,r,c,s.size,isHorizontal)){
-    for(let i=0;i<s.size;i++){
-      const rr=isHorizontal?r:r+i,cc=isHorizontal?c+i:c;
+  // 计算船只将要占据的所有格子并显示预览
+  for(let i=0;i<s.size;i++){
+    const rr=isHorizontal?r:r+i,cc=isHorizontal?c+i:c;
+    // 检查格子是否在棋盘范围内
+    if(rr>=0 && rr<GRID_SIZE && cc>=0 && cc<GRID_SIZE){
       const t=document.querySelector(`${gridSelector} .cell[data-row="${rr}"][data-col="${cc}"]`);
-      if(t)t.classList.add('preview');
+      if(t)t.classList.add(previewClass);
     }
   }
 }
@@ -1308,10 +1415,24 @@ function endGame(win, isPvpMode) {
 // ===== UI工具 =====
 function updateUI(){
   const sb=document.getElementById('statusBar');
+  const undoBtn=document.getElementById('undoBtn');
+  
   if(phase==='placing'){
     sb.className='status-bar placing';
     if(selectedIdx!==null)setMsg(`已选 ${SHIPS_DATA[selectedIdx].name}（${SHIPS_DATA[selectedIdx].size}格）| 方向:${isHorizontal?'→':'↓'}`)
     else setMsg('🎯选择左侧船只后点击棋盘放置');
+    
+    // 启用/禁用撤回按钮
+    let currentHistory = placementHistory;
+    if (gameMode === 'pvp') {
+      if (currentPlacingPlayer === 2) {
+        currentHistory = placementHistoryP2;
+      }
+    }
+    undoBtn.disabled = currentHistory.length === 0;
+  }else{
+    // 战斗阶段禁用撤回按钮
+    undoBtn.disabled = true;
   }
   updScore();
 }
