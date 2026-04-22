@@ -479,6 +479,11 @@ function selectGameMode(mode) {
   }
   
   init();
+  
+  // 人机模式：初始化时就随机摆放敌方船只
+  if (mode === 'ai') {
+    randomlyPlaceShips(enemyBoard, enemyShips);
+  }
 }
 
 function switchPlayer() {
@@ -634,6 +639,21 @@ function doPlace(bd,r,c,sz,h,idx){
   return cells;
 }
 
+// 通用的随机放置船只函数
+function randomlyPlaceShips(board, ships){
+  SHIPS_DATA.forEach((s,i)=>{
+    let ok=false,tries=0;
+    while(!ok&&tries<500){
+      const h=Math.random()>.5,r=Math.floor(Math.random()*GRID_SIZE),c=Math.floor(Math.random()*GRID_SIZE);
+      if(canPlace(board,r,c,s.size,h)){
+        ships.push({...s,idx:i,cells:doPlace(board,r,c,s.size,h,i),sunk:false});
+        ok=true;
+      }
+      tries++;
+    }
+  });
+}
+
 function onPlace(r,c,boardType){
   if(phase!=='placing'||selectedIdx===null)return;
   
@@ -768,20 +788,7 @@ function startBattle(){
   document.getElementById('shipDock').style.opacity='.4';
 
   if (gameMode === 'ai') {
-    // 人机模式：AI自动随机放置船只
-    SHIPS_DATA.forEach((s,i)=>{
-      let ok=false,tries=0;
-      while(!ok&&tries<500){
-        const h=Math.random()>.5,r=Math.floor(Math.random()*GRID_SIZE),c=Math.floor(Math.random()*GRID_SIZE);
-        if(canPlace(enemyBoard,r,c,s.size,h)){
-          enemyShips.push({...s,idx:i,cells:doPlace(enemyBoard,r,c,s.size,h,i),sunk:false});
-          ok=true;
-        }
-        tries++;
-      }
-    });
-    
-    // 显示当前玩家指示器
+    // 人机模式：显示当前玩家指示器
     document.getElementById('currentPlayerIndicator').style.display = 'block';
     document.getElementById('currentPlayerIndicator').textContent = '你的回合';
   } else {
@@ -902,7 +909,8 @@ function onPvpAttack(r, c, targetBoardType) {
     boom(document.querySelector(`${gridSelector} .cell[data-row="${r}"][data-col="${c}"]`),true);
     
     // 检查是否击沉
-    checkSinkPvp(targetShips, v.idx, targetBoardType);
+    const sinkType = targetBoardType === 'player' ? 'player2Attacks' : 'player1Attacks';
+    checkSink(targetShips, v.idx, targetBoard, sinkType);
     
     if (targetBoardType === 'player') {
       renderP();
@@ -915,11 +923,11 @@ function onPvpAttack(r, c, targetBoardType) {
     const player2AllSunk = enemyShips.every(s => s.sunk);
     
     if (player1AllSunk) {
-      endGamePvp(false);
+      endGame(false, true);
       return;
     }
     if (player2AllSunk) {
-      endGamePvp(true);
+      endGame(true, true);
       return;
     }
     
@@ -949,43 +957,6 @@ function onPvpAttack(r, c, targetBoardType) {
       const currentPlayer = isPlayerTurn ? '玩家1' : '玩家2';
       setMsg(`💥${currentPlayer}命中！继续攻击！`);
     }
-  }
-}
-
-function checkSinkPvp(ships, idx, targetBoardType) {
-  const s=ships[idx];if(!s||s.sunk)return;
-  
-  const targetBoard = targetBoardType === 'player' ? playerBoard : enemyBoard;
-  
-  if(s.cells.every(p=>targetBoard[p.row][p.col]&&targetBoard[p.row][p.col].hit)){
-    s.sunk=true;
-    
-    // 更新击沉计数
-    if (targetBoardType === 'player') {
-      eSunk++;
-    } else {
-      pSunk++;
-    }
-    
-    updScore();
-    
-    const attacker = targetBoardType === 'player' ? '玩家2' : '玩家1';
-    setMsg(`🎉${attacker}击沉了${s.name}！继续进攻！`);
-  }
-}
-
-function endGamePvp(player1Win) {
-  phase='ended';
-  const sb=document.getElementById('statusBar');
-  if(player1Win){
-    sb.className='status-bar win';
-    setMsg('🏆 玩家1胜利！');
-    document.getElementById('currentPlayerIndicator').textContent = '玩家1胜利！';
-  }
-  else{
-    sb.className='status-bar lose';
-    setMsg('💀 玩家1失败...玩家2胜利！');
-    document.getElementById('currentPlayerIndicator').textContent = '玩家2胜利！';
   }
 }
 
@@ -1033,9 +1004,9 @@ function onAttack(r,c){
     v.revealed=true;v.hit=true;
     v.idx=v.idx!==undefined?v.idx:findShipIndex(enemyShips,v);
     boom(document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`),true);
-    checkSink(enemyShips,v.idx,true);
+    checkSink(enemyShips, v.idx, enemyBoard, 'playerAttacks');
     renderE();
-    if(pSunk>=5){endGame(true);return;}
+    if(pSunk>=5){endGame(true, false);return;}
     
     if (isVolleyMode) {
       volleyShotsLeft--;
@@ -1062,13 +1033,33 @@ function findShipIndex(ships,val){
   return 0;
 }
 
-function checkSink(ships,idx,side){
+// 通用的检查击沉函数
+function checkSink(ships, idx, targetBoard, sinkType) {
   const s=ships[idx];if(!s||s.sunk)return;
-  if(s.cells.every(p=>enemyBoard[p.row][p.col]&&enemyBoard[p.row][p.col].hit)){
+  
+  if(s.cells.every(p=>targetBoard[p.row][p.col]&&targetBoard[p.row][p.col].hit)){
     s.sunk=true;
-    if(side){pSunk++}else{eSunk++}
+    
+    // 更新击沉计数
+    if (sinkType === 'playerAttacks') {
+      // 玩家攻击敌方（人机模式或双人模式玩家1攻击玩家2）
+      pSunk++;
+      setMsg(`🎉${s.name}被击沉！继续进攻！`);
+    } else if (sinkType === 'enemyAttacks') {
+      // AI攻击玩家或玩家2攻击玩家1
+      eSunk++;
+      setMsg(`🎉${s.name}被击沉！危险...`);
+    } else if (sinkType === 'player1Attacks') {
+      // 双人模式玩家1攻击玩家2
+      pSunk++;
+      setMsg(`🎉玩家1击沉了${s.name}！继续进攻！`);
+    } else if (sinkType === 'player2Attacks') {
+      // 双人模式玩家2攻击玩家1
+      eSunk++;
+      setMsg(`🎉玩家2击沉了${s.name}！继续进攻！`);
+    }
+    
     updScore();
-    setMsg(`🎉${s.name}被击沉！${side?'继续进攻':'危险...'}`);
   }
 }
 
@@ -1176,9 +1167,9 @@ function aiTurn(){
       // AI hit
       pv.hit=true;pv.revealed=true;
       boom(document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`),true);
-      checkSink(playerShips,pv.idx,false);
+      checkSink(playerShips, pv.idx, playerBoard, 'enemyAttacks');
       renderP();
-      if(eSunk>=5){endGame(false);return;}
+      if(eSunk>=5){endGame(false, false);return;}
 
       // 进入追踪
       aiHunt=true;aiLastHit={r,c};
@@ -1231,10 +1222,10 @@ function executeAiVolleyAttack(shotsLeft) {
       pv.hit = true;
       pv.revealed = true;
       boom(document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`), true);
-      checkSink(playerShips, pv.idx, false);
+      checkSink(playerShips, pv.idx, playerBoard, 'enemyAttacks');
       renderP();
       if (eSunk >= 5) {
-        endGame(false);
+        endGame(false, false);
         return;
       }
 
@@ -1273,11 +1264,33 @@ function addAdjacents(r,c){
 }
 
 // ===== 结束 =====
-function endGame(win){
+function endGame(win, isPvpMode) {
   phase='ended';
   const sb=document.getElementById('statusBar');
-  if(win){sb.className='status-bar win';setMsg('🏆 胜利！你摧毁了全部敌舰！')}
-  else{sb.className='status-bar lose';setMsg('💀 失败...你的舰队全军覆没')}
+  
+  if (isPvpMode) {
+    // 双人模式
+    if(win){
+      sb.className='status-bar win';
+      setMsg('🏆 玩家1胜利！');
+      document.getElementById('currentPlayerIndicator').textContent = '玩家1胜利！';
+    }
+    else{
+      sb.className='status-bar lose';
+      setMsg('💀 玩家1失败...玩家2胜利！');
+      document.getElementById('currentPlayerIndicator').textContent = '玩家2胜利！';
+    }
+  } else {
+    // 人机模式
+    if(win){
+      sb.className='status-bar win';
+      setMsg('🏆 胜利！你摧毁了全部敌舰！');
+    }
+    else{
+      sb.className='status-bar lose';
+      setMsg('💀 失败...你的舰队全军覆没');
+    }
+  }
 }
 
 // ===== UI工具 =====
