@@ -1015,8 +1015,21 @@ function renderP(){
   document.querySelectorAll('.player-grid .cell').forEach(cell=>{
     const r=+cell.dataset.row,c=+cell.dataset.col,v=playerBoard[r][c];
     cell.className='cell';cell.innerHTML='';
-    if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
-    else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
+    
+    if (gameMode === 'pvp' && phase === 'battle') {
+      if (isPlayerTurn) {
+        if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+        else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
+      } else {
+        if(v&&v.revealed){
+          if(v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+          else cell.classList.add('miss');
+        }
+      }
+    } else {
+      if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+      else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
+    }
   });
   playerShips.forEach(s=>{
     if(s.sunk)s.cells.forEach(p=>{
@@ -1024,7 +1037,6 @@ function renderP(){
       if(c)c.classList.add('sunk','sink-effect');
     });
   });
-  // 显示敌方打中的miss
   for(let r=0;r<GRID_SIZE;r++)for(let c=0;c<GRID_SIZE;c++){
     if(playerBoard[r][c]&&playerBoard[r][c].missed){
       const cc=document.querySelector(`.player-grid .cell[data-row="${r}"][data-col="${c}"]`);
@@ -1038,28 +1050,34 @@ function renderE(){
     const r=+cell.dataset.row,c=+cell.dataset.col,v=enemyBoard[r][c];
     cell.className='cell';cell.innerHTML='';
     
-    // 双人模式放置阶段，且当前是玩家2在放置：显示所有船只（像 renderP 一样）
     if (gameMode === 'pvp' && phase === 'placing' && currentPlacingPlayer === 2) {
       if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
       else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
       return;
     }
     
-    // 其他情况：保持原有逻辑
-    // 检查是否是侦察卡揭示的格子
-    const isRevealed = revealedCells.some(rc => rc.row === r && rc.col === c);
-    
-    if(v&&v.revealed){
-      if(v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
-      else cell.classList.add('miss');
-    } else if (isRevealed && v && v.idx !== undefined) {
-      // 侦察卡揭示的未命中船只 - 显示半透明轮廓
-      cell.classList.add('scout-reveal');
-      // 添加半透明的船只SVG
-      const svg = SHIP_SVGS[v.idx]();
-      // 给SVG添加半透明样式
-      const semiTransparentSvg = svg.replace('class="ship-svg"', 'class="ship-svg" style="opacity:0.4"');
-      cell.innerHTML = semiTransparentSvg;
+    if (gameMode === 'pvp' && phase === 'battle') {
+      if (!isPlayerTurn) {
+        if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+        else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
+      } else {
+        if(v&&v.revealed){
+          if(v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+          else cell.classList.add('miss');
+        }
+      }
+    } else {
+      const isRevealed = revealedCells.some(rc => rc.row === r && rc.col === c);
+      
+      if(v&&v.revealed){
+        if(v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+        else cell.classList.add('miss');
+      } else if (isRevealed && v && v.idx !== undefined) {
+        cell.classList.add('scout-reveal');
+        const svg = SHIP_SVGS[v.idx]();
+        const semiTransparentSvg = svg.replace('class="ship-svg"', 'class="ship-svg" style="opacity:0.4"');
+        cell.innerHTML = semiTransparentSvg;
+      }
     }
   });
   enemyShips.forEach(s=>{
@@ -1741,6 +1759,10 @@ function endTurn() {
     
     isPlayerTurn = !isPlayerTurn;
     hideEndTurnButton();
+    
+    renderP();
+    renderE();
+    
     if (isPlayerTurn) {
       document.getElementById('currentPlayerIndicator').textContent = '玩家1的回合';
       setMsg('⏭️ 玩家2回合结束，玩家1的回合！');
