@@ -611,30 +611,17 @@ function switchPlayer() {
   const isPlayer1Done = playerShips.length === SHIPS_DATA.length;
   const isPlayer2Done = enemyShips.length === SHIPS_DATA.length;
   
-  if (isPlayer1Done && isPlayer2Done) {
-    // 双方都已完成，准备开始战斗
-    document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
-    document.getElementById('startBtn').disabled = false;
-    setMsg('✅双方部署完毕！点击开始战斗');
-    // 切换玩家按钮保持显示，直到点击开始战斗
-    updateUI();
-    return;
-  }
-  
   // 切换到另一个玩家
   if (currentPlacingPlayer === 1) {
     // 玩家1切换到玩家2
     currentPlacingPlayer = 2;
     document.body.classList.remove('placing-player1');
     document.body.classList.add('placing-player2');
-    document.getElementById('currentPlayerIndicator').textContent = '玩家2放置船只';
     
     // 重置船坞选择状态
     buildDock();
     selectedIdx = null;
     isHorizontal = true;
-    
-    setMsg('🎯 玩家2放置船只');
     
     // 渲染棋盘（不重置，只是重新渲染）
     renderP();
@@ -644,18 +631,28 @@ function switchPlayer() {
     currentPlacingPlayer = 1;
     document.body.classList.remove('placing-player2');
     document.body.classList.add('placing-player1');
-    document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
     
     // 重置船坞选择状态
     buildDock();
     selectedIdx = null;
     isHorizontal = true;
     
-    setMsg('🎯 玩家1放置船只');
-    
     // 渲染棋盘
     renderP();
     renderE();
+  }
+  
+  // 显示对应的提示信息
+  if (isPlayer1Done && isPlayer2Done) {
+    // 双方都已完成，准备开始战斗
+    document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
+    document.getElementById('startBtn').disabled = false;
+    setMsg('✅双方部署完毕！点击开始战斗');
+  } else {
+    // 还有玩家没完成放置
+    document.getElementById('currentPlayerIndicator').textContent = 
+      currentPlacingPlayer === 1 ? '玩家1放置船只' : '玩家2放置船只';
+    setMsg(`🎯 玩家${currentPlacingPlayer}放置船只`);
   }
   
   updateUI();
