@@ -616,8 +616,7 @@ function switchPlayer() {
     document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
     document.getElementById('startBtn').disabled = false;
     setMsg('✅双方部署完毕！点击开始战斗');
-    // 战斗开始前隐藏切换玩家按钮
-    document.getElementById('switchPlayerBtn').style.display = 'none';
+    // 切换玩家按钮保持显示，直到点击开始战斗
     updateUI();
     return;
   }
@@ -959,8 +958,7 @@ function onPlace(r,c,boardType){
       document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
       document.getElementById('startBtn').disabled = false;
       setMsg('✅双方部署完毕！点击开始战斗');
-      // 战斗开始前隐藏切换玩家按钮
-      document.getElementById('switchPlayerBtn').style.display = 'none';
+      // 切换玩家按钮保持显示，直到点击开始战斗
     } else if (currentPlacingPlayer === 1 && isPlayer1Done) {
       // 玩家1完成放置
       document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
