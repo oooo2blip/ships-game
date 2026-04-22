@@ -483,6 +483,7 @@ function selectGameMode(mode) {
   // 人机模式：初始化时就随机摆放敌方船只
   if (mode === 'ai') {
     randomlyPlaceShips(enemyBoard, enemyShips);
+    renderE(); // 渲染敌方棋盘（数据已填充但需要更新DOM）
   }
 }
 
@@ -592,12 +593,23 @@ function init(){
 
 function buildDock(){
   const dock=document.getElementById('shipDock');
-  Array.from(dock.children).slice(2).forEach(el=>el.remove());
+  // 保存标题和旋转提示
+  const titleEl = dock.querySelector('.dock-title');
+  const hintEl = dock.querySelector('.rotate-hint');
+  
+  // 完全清空
+  dock.innerHTML = '';
+  
+  // 重新添加标题和提示
+  if (titleEl) dock.appendChild(titleEl);
+  if (hintEl) dock.appendChild(hintEl);
+  
+  // 添加船只选项
   SHIPS_DATA.forEach((s,i)=>{
     const el=document.createElement('div');el.className='ship-option';el.id=`opt${i}`;
     el.innerHTML=`<span>${SHIP_SVGS[i]()}</span><div><div class="ship-option-name">${s.name}</div><div class="ship-option-size">${s.size}格</div></div>`;
     el.onclick=()=>pickShip(i);
-    dock.insertBefore(el,dock.lastElementChild);
+    dock.appendChild(el);
   });
 }
 
