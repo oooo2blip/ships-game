@@ -581,7 +581,7 @@ function selectGameMode(mode) {
     document.body.classList.add('pvp-mode');
     document.body.classList.add('placing-player1');
     currentPlacingPlayer = 1;
-    document.getElementById('switchPlayerBtn').style.display = 'none';
+    document.getElementById('switchPlayerBtn').style.display = 'inline-block';
     document.getElementById('currentPlayerIndicator').style.display = 'block';
     document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
     document.getElementById('playerBoardLabel').textContent = '🏠 玩家1海域';
@@ -607,25 +607,16 @@ function selectGameMode(mode) {
 function switchPlayer() {
   if (phase !== 'placing' || gameMode !== 'pvp') return;
   
-  // 检查当前玩家是否完成放置
-  const currentPlayerShips = currentPlacingPlayer === 1 ? playerShips : enemyShips;
-  const isCurrentPlayerDone = currentPlayerShips.length === SHIPS_DATA.length;
+  // 检查双方是否都已完成放置
+  const isPlayer1Done = playerShips.length === SHIPS_DATA.length;
+  const isPlayer2Done = enemyShips.length === SHIPS_DATA.length;
   
-  if (!isCurrentPlayerDone) {
-    shakeStatus('❌ 请先完成当前玩家的船只放置！');
-    return;
-  }
-  
-  // 检查对方玩家是否也完成了
-  const otherPlayerShips = currentPlacingPlayer === 1 ? enemyShips : playerShips;
-  const isOtherPlayerDone = otherPlayerShips.length === SHIPS_DATA.length;
-  
-  if (isOtherPlayerDone) {
+  if (isPlayer1Done && isPlayer2Done) {
     // 双方都已完成，准备开始战斗
     document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
     document.getElementById('startBtn').disabled = false;
     setMsg('✅双方部署完毕！点击开始战斗');
-    // 隐藏切换玩家按钮
+    // 战斗开始前隐藏切换玩家按钮
     document.getElementById('switchPlayerBtn').style.display = 'none';
     updateUI();
     return;
@@ -644,13 +635,13 @@ function switchPlayer() {
     selectedIdx = null;
     isHorizontal = true;
     
-    setMsg('🎯 玩家2放置你的舰队！选择船只后点击棋盘放置');
+    setMsg('🎯 玩家2放置船只');
     
     // 渲染棋盘（不重置，只是重新渲染）
     renderP();
     renderE();
   } else {
-    // 玩家2切换到玩家1（如果玩家1还没完成）
+    // 玩家2切换到玩家1
     currentPlacingPlayer = 1;
     document.body.classList.remove('placing-player2');
     document.body.classList.add('placing-player1');
@@ -661,7 +652,7 @@ function switchPlayer() {
     selectedIdx = null;
     isHorizontal = true;
     
-    setMsg('🎯 玩家1放置你的舰队！选择船只后点击棋盘放置');
+    setMsg('🎯 玩家1放置船只');
     
     // 渲染棋盘
     renderP();
@@ -712,9 +703,9 @@ function init(){
   document.getElementById('startBtn').disabled=true;
   document.getElementById('shipDock').style.opacity='1';
   
-  // 隐藏切换玩家按钮，直到玩家1完成放置
+  // 切换玩家按钮在pvp模式下始终显示
   if (gameMode === 'pvp') {
-    document.getElementById('switchPlayerBtn').style.display = 'none';
+    document.getElementById('switchPlayerBtn').style.display = 'inline-block';
     document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
     document.body.classList.add('placing-player1');
     document.body.classList.remove('placing-player2');
@@ -960,14 +951,22 @@ function onPlace(r,c,boardType){
   // 检查是否完成放置
   if (gameMode === 'pvp') {
     // 双人模式
-    if (currentPlacingPlayer === 1 && playerShips.length === SHIPS_DATA.length) {
+    const isPlayer1Done = playerShips.length === SHIPS_DATA.length;
+    const isPlayer2Done = enemyShips.length === SHIPS_DATA.length;
+    
+    if (isPlayer1Done && isPlayer2Done) {
+      // 双方都已完成放置
+      document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
+      document.getElementById('startBtn').disabled = false;
+      setMsg('✅双方部署完毕！点击开始战斗');
+      // 战斗开始前隐藏切换玩家按钮
+      document.getElementById('switchPlayerBtn').style.display = 'none';
+    } else if (currentPlacingPlayer === 1 && isPlayer1Done) {
       // 玩家1完成放置
-      document.getElementById('switchPlayerBtn').style.display = 'inline-block';
       document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
       setMsg('🎯 玩家1放置船只');
-    } else if (currentPlacingPlayer === 2 && enemyShips.length === SHIPS_DATA.length) {
+    } else if (currentPlacingPlayer === 2 && isPlayer2Done) {
       // 玩家2完成放置
-      document.getElementById('switchPlayerBtn').style.display = 'inline-block';
       document.getElementById('currentPlayerIndicator').textContent = '玩家2放置船只';
       setMsg('🎯 玩家2放置船只');
     } else {
