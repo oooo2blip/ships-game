@@ -1394,6 +1394,7 @@ function onAttack(r,c){
 function executePlayerAttack(r, c) {
   const isVolleyMode = currentMode === 'volley';
   const readyShip = getRandomReadyAttackerShip(playerShipEnergy);
+  const v = enemyBoard[r][c];
   
   if (readyShip && readyShip.type === 'carrier') {
     executeCarrierAttack(r, c, enemyBoard, enemyShips, '.enemy-grid', playerShipEnergy, readyShip.idx);
