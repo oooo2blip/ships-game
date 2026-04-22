@@ -1016,6 +1016,14 @@ function renderE(){
     const r=+cell.dataset.row,c=+cell.dataset.col,v=enemyBoard[r][c];
     cell.className='cell';cell.innerHTML='';
     
+    // 双人模式放置阶段，且当前是玩家2在放置：显示所有船只（像 renderP 一样）
+    if (gameMode === 'pvp' && phase === 'placing' && currentPlacingPlayer === 2) {
+      if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+      else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
+      return;
+    }
+    
+    // 其他情况：保持原有逻辑
     // 检查是否是侦察卡揭示的格子
     const isRevealed = revealedCells.some(rc => rc.row === r && rc.col === c);
     
