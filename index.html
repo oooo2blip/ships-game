@@ -6,7 +6,7 @@
 <title>⚓ 海战棋 - Naval Warfare</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:linear-gradient(180deg,#87CEEB 0%,#5BA3D9 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;color:#1a3a52;user-select:none}
+body{background:linear-gradient(180deg,#87CEEB 0%,#5BA3D9 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;color:#1a3a52;user-select:none;padding-bottom:120px}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20%30%,rgba(255,255,255,.08)0%,transparent 50%),radial-gradient(ellipse at 80%70%,rgba(255,255,255,.06)0%,transparent 50%);pointer-events:none;z-index:0;animation:waveBg 8s ease-in-out infinite alternate}
 @keyframes waveBg{0%{transform:translateY(0)}100%{transform:translateY(-10px)}}
 .title{font-size:2.4em;font-weight:800;margin-top:20px;text-shadow:0 3px 6px rgba(26,58,82,.25);letter-spacing:4px;z-index:1;position:relative;display:flex;align-items:center;gap:12px}
@@ -54,7 +54,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
 .rotate-hint{font-size:.85em;color:rgba(255,255,255,.8);text-align:center;margin-top:4px}
 .rotate-hint kbd{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-family:inherit}
-.scoreboard{z-index:1;position:relative;display:flex;gap:24px;margin-top:12px}
+.scoreboard{z-index:1;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:24px;background:rgba(0,0,0,.2);padding:16px 24px;border-radius:16px;backdrop-filter:blur(8px)}
 .score-card{background:rgba(255,255,255,.13);backdrop-filter:blur(8px);padding:12px 24px;border-radius:12px;text-align:center;min-width:130px}
 .score-card-label{font-size:.82em;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:1px}
 .score-card-value{font-size:2em;font-weight:800;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.15)}
@@ -607,7 +607,31 @@ function selectGameMode(mode) {
 function switchPlayer() {
   if (phase !== 'placing' || gameMode !== 'pvp') return;
   
-  // 隐藏当前玩家的船只
+  // 检查当前玩家是否完成放置
+  const currentPlayerShips = currentPlacingPlayer === 1 ? playerShips : enemyShips;
+  const isCurrentPlayerDone = currentPlayerShips.length === SHIPS_DATA.length;
+  
+  if (!isCurrentPlayerDone) {
+    shakeStatus('❌ 请先完成当前玩家的船只放置！');
+    return;
+  }
+  
+  // 检查对方玩家是否也完成了
+  const otherPlayerShips = currentPlacingPlayer === 1 ? enemyShips : playerShips;
+  const isOtherPlayerDone = otherPlayerShips.length === SHIPS_DATA.length;
+  
+  if (isOtherPlayerDone) {
+    // 双方都已完成，准备开始战斗
+    document.getElementById('currentPlayerIndicator').textContent = '双方放置完成准备战斗';
+    document.getElementById('startBtn').disabled = false;
+    setMsg('✅双方部署完毕！点击开始战斗');
+    // 隐藏切换玩家按钮
+    document.getElementById('switchPlayerBtn').style.display = 'none';
+    updateUI();
+    return;
+  }
+  
+  // 切换到另一个玩家
   if (currentPlacingPlayer === 1) {
     // 玩家1切换到玩家2
     currentPlacingPlayer = 2;
@@ -615,34 +639,33 @@ function switchPlayer() {
     document.body.classList.add('placing-player2');
     document.getElementById('currentPlayerIndicator').textContent = '玩家2放置船只';
     
-    // 重置船坞
+    // 重置船坞选择状态
     buildDock();
     selectedIdx = null;
     isHorizontal = true;
     
-    // 切换到玩家2的棋盘
-    // 注意：在双人模式中，玩家1使用playerGrid，玩家2使用enemyGrid
-    // 重新初始化玩家2的棋盘
-    enemyBoard = Array.from({length:GRID_SIZE},()=>Array(GRID_SIZE).fill(null));
-    enemyShips = [];
-    
     setMsg('🎯 玩家2放置你的舰队！选择船只后点击棋盘放置');
     
-    // 隐藏玩家1的船只
+    // 渲染棋盘（不重置，只是重新渲染）
     renderP();
     renderE();
   } else {
-    // 玩家2完成放置，准备开始战斗
+    // 玩家2切换到玩家1（如果玩家1还没完成）
     currentPlacingPlayer = 1;
     document.body.classList.remove('placing-player2');
     document.body.classList.add('placing-player1');
-    document.getElementById('currentPlayerIndicator').textContent = '双方放置完成，准备战斗！';
+    document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
     
-    // 检查双方是否都已放置完成
-    if (playerShips.length === SHIPS_DATA.length && enemyShips.length === SHIPS_DATA.length) {
-      document.getElementById('startBtn').disabled = false;
-      setMsg('✅双方部署完毕！点击开始战斗');
-    }
+    // 重置船坞选择状态
+    buildDock();
+    selectedIdx = null;
+    isHorizontal = true;
+    
+    setMsg('🎯 玩家1放置你的舰队！选择船只后点击棋盘放置');
+    
+    // 渲染棋盘
+    renderP();
+    renderE();
   }
   
   updateUI();
@@ -940,11 +963,13 @@ function onPlace(r,c,boardType){
     if (currentPlacingPlayer === 1 && playerShips.length === SHIPS_DATA.length) {
       // 玩家1完成放置
       document.getElementById('switchPlayerBtn').style.display = 'inline-block';
-      setMsg('✅玩家1部署完毕！点击"切换玩家"让玩家2放置');
+      document.getElementById('currentPlayerIndicator').textContent = '玩家1放置船只';
+      setMsg('🎯 玩家1放置船只');
     } else if (currentPlacingPlayer === 2 && enemyShips.length === SHIPS_DATA.length) {
       // 玩家2完成放置
       document.getElementById('switchPlayerBtn').style.display = 'inline-block';
-      setMsg('✅玩家2部署完毕！点击"切换玩家"开始战斗');
+      document.getElementById('currentPlayerIndicator').textContent = '玩家2放置船只';
+      setMsg('🎯 玩家2放置船只');
     } else {
       pickShip(targetShips.length);
     }
