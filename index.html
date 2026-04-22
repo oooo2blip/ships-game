@@ -48,6 +48,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .btn-secondary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(25,118,210,.5)}
 .btn-danger{background:linear-gradient(135deg,#EF5350,#C62828);color:#fff;box-shadow:0 4px 12px rgba(198,40,40,.35)}
 .btn-danger:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(198,40,40,.5)}
+.btn-warning{background:linear-gradient(135deg,#FF9800,#F57C00);color:#fff;box-shadow:0 4px 12px rgba(245,124,0,.35);animation:pulseButton 1.5s ease-in-out infinite}
+.btn-warning:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(245,124,0,.5)}
+@keyframes pulseButton{0%,100%{box-shadow:0 4px 12px rgba(245,124,0,.35)}50%{box-shadow:0 4px 20px rgba(255,152,0,.6),0 0 15px rgba(255,152,0,.3)}}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
 .rotate-hint{font-size:.85em;color:rgba(255,255,255,.8);text-align:center;margin-top:4px}
 .rotate-hint kbd{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-family:inherit}
@@ -242,6 +245,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
     <button class="btn btn-secondary" id="undoBtn" onclick="undoPlacement()" disabled>↩️ 撤回</button>
     <button class="btn btn-primary" id="switchPlayerBtn" onclick="switchPlayer()" style="display:none">🔄 切换玩家</button>
     <button class="btn btn-primary" id="startBtn" onclick="startBattle()" disabled>⚔️ 开始战斗！</button>
+    <button class="btn btn-warning" id="endTurnBtn" onclick="endTurn()" style="display:none">⏭️ 确认回合结束</button>
     <button class="btn btn-danger" onclick="resetGame()">🔄 重新开始</button>
   </div>
 
@@ -323,6 +327,7 @@ let currentMode = 'normal'; // normal, scout, volley
 let activeCard = null;
 let volleyShotsLeft = 0;
 let revealedCells = []; // 侦察卡揭示的格子
+let canEndTurn = false; // 是否可以结束当前回合
 
 function initTacticalCards() {
   playerCards = [];
@@ -654,7 +659,9 @@ function init(){
   activeCard = null;
   volleyShotsLeft = 0;
   revealedCells = [];
+  canEndTurn = false;
   document.getElementById('tacticalCards').style.display = 'none';
+  document.getElementById('endTurnBtn').style.display = 'none';
 
   document.getElementById('playerGrid').innerHTML='';
   document.getElementById('enemyGrid').innerHTML='';
@@ -1178,6 +1185,7 @@ function onPvpAttack(r, c, targetBoardType) {
 
   // 齐射模式处理
   const isVolleyMode = currentMode === 'volley';
+  const currentPlayer = isPlayerTurn ? '玩家1' : '玩家2';
   
   if(!v){
     // miss
@@ -1199,28 +1207,12 @@ function onPvpAttack(r, c, targetBoardType) {
         activeCard = null;
         renderCards();
         
-        // 切换玩家
-        isPlayerTurn = !isPlayerTurn;
-        if (isPlayerTurn) {
-          document.getElementById('currentPlayerIndicator').textContent = '玩家1的回合';
-          setMsg('💨玩家2未命中！玩家1的回合！');
-        } else {
-          document.getElementById('currentPlayerIndicator').textContent = '玩家2的回合';
-          setMsg('💨玩家1未命中！玩家2的回合！');
-        }
+        showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
       } else {
         setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
-      // 切换玩家
-      isPlayerTurn = !isPlayerTurn;
-      if (isPlayerTurn) {
-        document.getElementById('currentPlayerIndicator').textContent = '玩家1的回合';
-        setMsg('💨玩家2未命中！玩家1的回合！');
-      } else {
-        document.getElementById('currentPlayerIndicator').textContent = '玩家2的回合';
-        setMsg('💨玩家1未命中！玩家2的回合！');
-      }
+      showEndTurnButton(`⏭️ ${currentPlayer}未命中！点击"确认回合结束"按钮结束你的回合`);
     }
   }else{
     // hit!
@@ -1260,27 +1252,33 @@ function onPvpAttack(r, c, targetBoardType) {
         activeCard = null;
         renderCards();
         
-        // 切换玩家
-        isPlayerTurn = !isPlayerTurn;
-        if (isPlayerTurn) {
-          document.getElementById('currentPlayerIndicator').textContent = '玩家1的回合';
-          setMsg('💥玩家2命中！但齐射结束，玩家1的回合！');
-        } else {
-          document.getElementById('currentPlayerIndicator').textContent = '玩家2的回合';
-          setMsg('💥玩家1命中！但齐射结束，玩家2的回合！');
-        }
+        showEndTurnButton(`⏭️ ${currentPlayer}齐射结束！点击"确认回合结束"按钮结束你的回合`);
       } else {
         setMsg(`💥命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
       // 命中后继续当前玩家的回合
-      const currentPlayer = isPlayerTurn ? '玩家1' : '玩家2';
+      hideEndTurnButton();
       setMsg(`💥${currentPlayer}命中！继续攻击！`);
     }
   }
 }
 
+function showEndTurnButton(message) {
+  canEndTurn = true;
+  document.getElementById('endTurnBtn').style.display = 'inline-block';
+  if (message) {
+    setMsg(message);
+  }
+}
+
+function hideEndTurnButton() {
+  canEndTurn = false;
+  document.getElementById('endTurnBtn').style.display = 'none';
+}
+
 function finishPlayerTurn(showMessage) {
+  hideEndTurnButton();
   if (showMessage) {
     setMsg('💨未命中！敌军回合...');
   }
@@ -1288,6 +1286,24 @@ function finishPlayerTurn(showMessage) {
   renderPlayerSkills();
   isPlayerTurn = false;
   setTimeout(aiTurn, 1200);
+}
+
+function endTurn() {
+  if (!canEndTurn || phase !== 'battle') return;
+  
+  if (gameMode === 'ai') {
+    finishPlayerTurn(true);
+  } else {
+    isPlayerTurn = !isPlayerTurn;
+    hideEndTurnButton();
+    if (isPlayerTurn) {
+      document.getElementById('currentPlayerIndicator').textContent = '玩家1的回合';
+      setMsg('⏭️ 玩家2回合结束，玩家1的回合！');
+    } else {
+      document.getElementById('currentPlayerIndicator').textContent = '玩家2的回合';
+      setMsg('⏭️ 玩家1回合结束，玩家2的回合！');
+    }
+  }
 }
 
 function onAttack(r,c){
@@ -1335,14 +1351,15 @@ function onAttack(r,c){
           currentMode = 'normal';
           activeCard = null;
           renderCards();
-          finishPlayerTurn(true);
+          showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
         } else {
           setMsg(`💥地毯轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
         }
       } else if (anyHit) {
+        hideEndTurnButton();
         setMsg('💥地毯轰炸命中！继续攻击！');
       } else {
-        finishPlayerTurn(true);
+        showEndTurnButton('⏭️ 地毯轰炸未命中！点击"确认回合结束"按钮结束你的回合');
       }
     }, 1000);
     return;
@@ -1380,14 +1397,15 @@ function onAttack(r,c){
           currentMode = 'normal';
           activeCard = null;
           renderCards();
-          finishPlayerTurn(true);
+          showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
         } else {
-          setMsg(`�范围轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
+          setMsg(`💥范围轰炸完成！还剩 ${volleyShotsLeft} 次攻击机会`);
         }
       } else if (anyHit) {
+        hideEndTurnButton();
         setMsg('💥范围轰炸命中！继续攻击！');
       } else {
-        finishPlayerTurn(true);
+        showEndTurnButton('⏭️ 范围轰炸未命中！点击"确认回合结束"按钮结束你的回合');
       }
     }, 800);
     return;
@@ -1413,14 +1431,15 @@ function onAttack(r,c){
         currentMode = 'normal';
         activeCard = null;
         renderCards();
-        finishPlayerTurn(!result.hit);
+        showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
       } else {
         setMsg(`💥穿甲打击！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else if (result.hit) {
+      hideEndTurnButton();
       setMsg('💥穿甲打击命中！继续攻击！');
     } else {
-      finishPlayerTurn(true);
+      showEndTurnButton('⏭️ 穿甲打击未命中！点击"确认回合结束"按钮结束你的回合');
     }
     return;
   }
@@ -1440,12 +1459,12 @@ function onAttack(r,c){
           currentMode = 'normal';
           activeCard = null;
           renderCards();
-          finishPlayerTurn(true);
+          showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
         } else {
           setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
         }
       } else {
-        finishPlayerTurn(true);
+        showEndTurnButton('⏭️ 未命中！点击"确认回合结束"按钮结束你的回合');
       }
     } else {
       v.revealed = true;
@@ -1475,15 +1494,15 @@ function onAttack(r,c){
                 currentMode = 'normal';
                 activeCard = null;
                 renderCards();
-                finishPlayerTurn(!hit);
+                showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
               } else {
                 setMsg(hit ? `⚡闪电连击命中！还剩 ${volleyShotsLeft} 次攻击机会` : `⚡闪电连击未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
               }
             } else if (hit) {
+              hideEndTurnButton();
               setMsg('⚡闪电连击命中！继续攻击！');
             } else {
-              setMsg('⚡闪电连击未命中！敌军回合...');
-              finishPlayerTurn(false);
+              showEndTurnButton('⏭️ 闪电连击未命中！点击"确认回合结束"按钮结束你的回合');
             }
           }, 500);
         });
@@ -1495,11 +1514,12 @@ function onAttack(r,c){
             currentMode = 'normal';
             activeCard = null;
             renderCards();
-            finishPlayerTurn(false);
+            showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
           } else {
             setMsg(`💥命中！闪电连击未触发，还剩 ${volleyShotsLeft} 次攻击机会`);
           }
         } else {
+          hideEndTurnButton();
           setMsg('💥命中！继续攻击！');
         }
       }
@@ -1519,12 +1539,12 @@ function onAttack(r,c){
         currentMode = 'normal';
         activeCard = null;
         renderCards();
-        finishPlayerTurn(true);
+        showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
       } else {
         setMsg(`💨未命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
-      finishPlayerTurn(true);
+      showEndTurnButton('⏭️ 未命中！点击"确认回合结束"按钮结束你的回合');
     }
   } else {
     const cell = document.querySelector(`.enemy-grid .cell[data-row="${r}"][data-col="${c}"]`);
@@ -1542,12 +1562,12 @@ function onAttack(r,c){
           currentMode = 'normal';
           activeCard = null;
           renderCards();
-          finishPlayerTurn(true);
+          showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
         } else {
           setMsg(`🛡️闪避！还剩 ${volleyShotsLeft} 次攻击机会`);
         }
       } else {
-        finishPlayerTurn(true);
+        showEndTurnButton('⏭️ 攻击被闪避！点击"确认回合结束"按钮结束你的回合');
       }
       return;
     }
@@ -1566,11 +1586,12 @@ function onAttack(r,c){
         currentMode = 'normal';
         activeCard = null;
         renderCards();
-        finishPlayerTurn(false);
+        showEndTurnButton('⏭️ 齐射结束！点击"确认回合结束"按钮结束你的回合');
       } else {
         setMsg(`💥命中！还剩 ${volleyShotsLeft} 次攻击机会`);
       }
     } else {
+      hideEndTurnButton();
       setMsg('💥命中！继续攻击！');
     }
   }
@@ -1617,6 +1638,7 @@ function finishAiTurn(showMessage) {
   }
   accumulateEnergy(playerShips, playerShipEnergy);
   isPlayerTurn = true;
+  hideEndTurnButton();
 }
 
 // ===== AI =====
