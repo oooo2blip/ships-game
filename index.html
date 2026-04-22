@@ -180,7 +180,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .skills-panel{z-index:1;position:relative;background:rgba(255,255,255,.13);backdrop-filter:blur(8px);border-radius:12px;padding:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-width:300px;margin-top:8px}
 .skills-panel-title{font-size:.85em;font-weight:700;color:#fff;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.2);letter-spacing:1px;width:100%}
 .skill-card{width:100px;height:80px;border-radius:8px;cursor:pointer;transition:all .2s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;position:relative;overflow:hidden;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
-.skill-card:hover:not(.disabled){transform:translateY(-2px);box-shadow:0 4px 15px rgba(0,0,0,.2)}
+.skill-card.ready:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(0,0,0,.2)}
 .skill-card.ready{border-color:#FFD700;background:rgba(255,215,0,.15);box-shadow:0 0 15px rgba(255,215,0,.3);animation:skillReadyPulse 1s ease-in-out infinite}
 @keyframes skillReadyPulse{0%,100%{box-shadow:0 0 10px rgba(255,215,0,.3)}50%{box-shadow:0 0 25px rgba(255,215,0,.6)}}
 .skill-card.disabled{opacity:.4;cursor:not-allowed}
