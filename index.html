@@ -734,29 +734,41 @@ function init(){
 
 function buildDock(){
   const dock=document.getElementById('shipDock');
-  // 保存标题和旋转提示
   const titleEl = dock.querySelector('.dock-title');
   const hintEl = dock.querySelector('.rotate-hint');
   
-  // 完全清空
   dock.innerHTML = '';
   
-  // 重新添加标题和提示
   if (titleEl) dock.appendChild(titleEl);
   if (hintEl) dock.appendChild(hintEl);
   
-  // 添加船只选项
+  let targetShips = playerShips;
+  if (gameMode === 'pvp' && currentPlacingPlayer === 2) {
+    targetShips = enemyShips;
+  }
+  
   SHIPS_DATA.forEach((s,i)=>{
     const el=document.createElement('div');el.className='ship-option';el.id=`opt${i}`;
     el.innerHTML=`<span>${SHIP_SVGS[i]()}</span><div><div class="ship-option-name">${s.name}</div><div class="ship-option-size">${s.size}格</div></div>`;
     el.onclick=()=>pickShip(i);
+    
+    if (targetShips.some(x=>x.idx===i)) {
+      el.classList.add('placed');
+    }
+    
     dock.appendChild(el);
   });
 }
 
 function pickShip(i){
   if(phase!=='placing')return;
-  if(playerShips.some(x=>x.idx===i))return;
+  
+  let targetShips = playerShips;
+  if (gameMode === 'pvp' && currentPlacingPlayer === 2) {
+    targetShips = enemyShips;
+  }
+  
+  if(targetShips.some(x=>x.idx===i))return;
   selectedIdx=i;
   document.querySelectorAll('.ship-option').forEach((e,j)=>e.classList.toggle('selected',j===i));
   updateUI();
