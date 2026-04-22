@@ -64,8 +64,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 @keyframes sinkDown{0%{opacity:1;transform:translateY(0)rotate(0)}50%{opacity:.7;transform:translateY(10px)rotate(15deg)}100%{opacity:0;transform:translateY(30px)rotate(45deg)}}
 .thinking::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:translate(-50%,-50%)rotate(360deg)}}
-.battle-mode .player-grid .cell.has-ship:not(.hit):not(.sunk){background:rgba(135,206,250,.45)!important;border-color:rgba(255,255,255,.22)!important}
-.battle-mode .player-grid .cell.has-ship:not(.hit):not(.sunk) .ship-svg{display:none}
 @media(max-width:900px){.game-container{gap:20px}.grid{grid-template-columns:repeat(10,38px);grid-template-rows:repeat(10,38px)}.cell{width:38px;height:38px}.ship-svg{width:30px;height:30px}}
 @media(max-width:600px){.title{font-size:1.6em}.grid{grid-template-columns:repeat(10,32px);grid-template-rows:repeat(10,32px);gap:2px}.cell{width:32px;height:32px;font-size:1.1em}.ship-svg{width:26px;height:26px}.game-container{flex-direction:column;align-items:center}.ship-dock{min-width:unset;width:100%;max-width:340px;flex-direction:row;flex-wrap:wrap;justify-content:center}.dock-title{width:100%}}
 
@@ -960,8 +958,8 @@ function renderP(){
   document.querySelectorAll('.player-grid .cell').forEach(cell=>{
     const r=+cell.dataset.row,c=+cell.dataset.col,v=playerBoard[r][c];
     cell.className='cell';cell.innerHTML='';
-    if(v&&phase==='placing'){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
-    else if(v&&v.hit){cell.classList.add('hit');if(phase!=='placing')cell.innerHTML=SHIP_SVGS[v.idx]()}
+    if(v&&v.hit){cell.classList.add('hit');cell.innerHTML=SHIP_SVGS[v.idx]()}
+    else if(v&&v.idx!==undefined){cell.classList.add('has-ship');cell.innerHTML=SHIP_SVGS[v.idx]()}
   });
   playerShips.forEach(s=>{
     if(s.sunk)s.cells.forEach(p=>{
