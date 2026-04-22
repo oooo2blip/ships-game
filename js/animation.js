@@ -12,12 +12,12 @@ class GameAnimation {
         this.isAnimating = true;
         
         const fromWrapper = fromBoard === 'player' ? 
-            document.querySelector('.player-section .board-3d-wrapper') :
-            document.querySelector('.enemy-section .board-3d-wrapper');
+            document.querySelector('.player-wrapper .board-3d-wrapper') :
+            document.querySelector('.enemy-wrapper .board-3d-wrapper');
         
         const toWrapper = toBoard === 'player' ? 
-            document.querySelector('.player-section .board-3d-wrapper') :
-            document.querySelector('.enemy-section .board-3d-wrapper');
+            document.querySelector('.player-wrapper .board-3d-wrapper') :
+            document.querySelector('.enemy-wrapper .board-3d-wrapper');
         
         const cell = toBoard === 'player' ? 
             document.querySelector(`#player-board .board-cell[data-row="${row}"][data-col="${col}"]`) :
@@ -26,8 +26,8 @@ class GameAnimation {
         if (fromWrapper) {
             gsap.to(fromWrapper, {
                 duration: 0.2,
-                rotationX: '20deg',
-                rotationZ: '5deg',
+                rotationX: '5deg',
+                rotationZ: '2deg',
                 scale: 1.02,
                 ease: 'power2.out'
             });
@@ -36,8 +36,8 @@ class GameAnimation {
         if (toWrapper) {
             gsap.to(toWrapper, {
                 duration: 0.2,
-                rotationX: '10deg',
-                rotationZ: '-5deg',
+                rotationX: '3deg',
+                rotationZ: '-2deg',
                 scale: 1.02,
                 ease: 'power2.out'
             });
@@ -54,7 +54,7 @@ class GameAnimation {
         if (fromWrapper) {
             gsap.to(fromWrapper, {
                 duration: 0.3,
-                rotationX: '15deg',
+                rotationX: '0deg',
                 rotationZ: '0deg',
                 scale: 1,
                 ease: 'power2.out'
@@ -64,7 +64,7 @@ class GameAnimation {
         if (toWrapper) {
             gsap.to(toWrapper, {
                 duration: 0.3,
-                rotationX: '15deg',
+                rotationX: '0deg',
                 rotationZ: '0deg',
                 scale: 1,
                 ease: 'power2.out'
@@ -318,12 +318,12 @@ class GameAnimation {
         });
         
         const fromSection = fromPlayer ? 
-            document.querySelector('.player-section') :
-            document.querySelector('.enemy-section');
+            document.querySelector('.player-wrapper') :
+            document.querySelector('.enemy-wrapper');
         
         const toSection = toPlayer ?
-            document.querySelector('.player-section') :
-            document.querySelector('.enemy-section');
+            document.querySelector('.player-wrapper') :
+            document.querySelector('.enemy-wrapper');
         
         if (fromSection) {
             gsap.to(fromSection, {

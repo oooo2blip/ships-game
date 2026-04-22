@@ -38,81 +38,95 @@
             </div>
         </header>
 
-        <!-- 主游戏区域 - 左中右三栏 -->
+        <!-- 主游戏区域 - 中央对战布局 -->
         <main class="game-main">
-            <!-- 左侧：我方棋盘和舰队信息 -->
-            <section class="board-section player-section">
-                <div class="section-header">
-                    <h2 class="section-title">我方舰队</h2>
+            <!-- 左侧：我方舰队信息和控制 -->
+            <aside class="side-panel left-panel">
+                <div class="panel-section">
+                    <h3 class="panel-title">我方舰队</h3>
+                    <div class="fleet-status-vertical" id="player-fleet-status"></div>
                 </div>
-                <div class="fleet-status-large" id="player-fleet-status"></div>
-                <div class="board-container">
-                    <div class="board-3d-wrapper">
-                        <div id="player-board" class="game-board">
-                            <!-- 棋盘格子将由JS生成 -->
+                <div class="panel-section">
+                    <div class="ship-placement-controls hidden" id="ship-placement">
+                        <h3 class="panel-title">舰船部署</h3>
+                        <div class="ship-selector" id="ship-selector"></div>
+                        <div class="placement-controls">
+                            <button id="rotate-btn" class="btn btn-small">旋转</button>
+                            <button id="random-placement-btn" class="btn btn-small">随机部署</button>
+                            <button id="confirm-placement-btn" class="btn btn-primary btn-small">确认部署</button>
                         </div>
                     </div>
                 </div>
-                <div class="ship-placement-controls hidden" id="ship-placement">
-                    <div class="ship-selector" id="ship-selector"></div>
-                    <div class="placement-controls">
-                        <button id="rotate-btn" class="btn btn-small">旋转</button>
-                        <button id="random-placement-btn" class="btn btn-small">随机部署</button>
-                        <button id="confirm-placement-btn" class="btn btn-primary btn-small">确认部署</button>
+            </aside>
+
+            <!-- 中央：对战棋盘区域 -->
+            <section class="battle-area">
+                <!-- 敌方棋盘 -->
+                <div class="board-wrapper enemy-wrapper">
+                    <div class="board-label">敌方海域</div>
+                    <div class="board-container">
+                        <div class="board-3d-wrapper">
+                            <div id="enemy-board" class="game-board">
+                                <!-- 棋盘格子将由JS生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="attack-controls hidden" id="attack-controls">
+                        <div class="coordinate-display" id="coordinate-display">
+                            <span class="coord-label">目标坐标:</span>
+                            <span class="coord-value" id="target-coord">-</span>
+                        </div>
+                        <button id="fire-btn" class="btn btn-primary btn-large" disabled>发射</button>
+                    </div>
+                </div>
+
+                <!-- 中央：3D战场场景和消息 -->
+                <div class="center-connector">
+                    <div class="scene-container">
+                        <canvas id="three-scene"></canvas>
+                    </div>
+                    <div class="message-panel" id="message-panel">
+                        <div class="message-content" id="message-content">部署你的舰队，准备开战！</div>
+                    </div>
+                </div>
+
+                <!-- 玩家棋盘 -->
+                <div class="board-wrapper player-wrapper">
+                    <div class="board-label">我方舰队</div>
+                    <div class="board-container">
+                        <div class="board-3d-wrapper">
+                            <div id="player-board" class="game-board">
+                                <!-- 棋盘格子将由JS生成 -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 中央：3D战场场景 -->
-            <section class="scene-section">
-                <div class="scene-container">
-                    <canvas id="three-scene"></canvas>
-                    <div class="attack-prediction" id="attack-prediction">
-                        <div class="prediction-line"></div>
-                        <div class="prediction-target"></div>
-                    </div>
+            <!-- 右侧：敌方舰队信息和环境状态 -->
+            <aside class="side-panel right-panel">
+                <div class="panel-section">
+                    <h3 class="panel-title">敌方舰队</h3>
+                    <div class="fleet-status-vertical" id="enemy-fleet-status"></div>
                 </div>
-                <div class="message-panel" id="message-panel">
-                    <div class="message-content" id="message-content">部署你的舰队，准备开战！</div>
-                </div>
-            </section>
-
-            <!-- 右侧：敌方棋盘和环境状态面板 -->
-            <section class="board-section enemy-section">
-                <div class="section-header">
-                    <h2 class="section-title">敌方海域</h2>
-                </div>
-                <div class="fleet-status-large" id="enemy-fleet-status"></div>
-                <div class="board-container">
-                    <div class="board-3d-wrapper">
-                        <div id="enemy-board" class="game-board">
-                            <!-- 棋盘格子将由JS生成 -->
-                        </div>
-                    </div>
-                </div>
-                <div class="attack-controls hidden" id="attack-controls">
-                    <div class="coordinate-display" id="coordinate-display">
-                        <span class="coord-label">目标坐标:</span>
-                        <span class="coord-value" id="target-coord">-</span>
-                    </div>
-                    <button id="fire-btn" class="btn btn-primary btn-large" disabled>发射</button>
-                </div>
-                <div class="environment-panel">
+                <div class="panel-section">
                     <h3 class="panel-title">环境状态</h3>
-                    <div class="env-item">
-                        <span class="env-label">海况:</span>
-                        <span class="env-value">平静</span>
-                    </div>
-                    <div class="env-item">
-                        <span class="env-label">风向:</span>
-                        <span class="env-value">东北风 3级</span>
-                    </div>
-                    <div class="env-item">
-                        <span class="env-label">能见度:</span>
-                        <span class="env-value">良好</span>
+                    <div class="environment-panel">
+                        <div class="env-item">
+                            <span class="env-label">海况:</span>
+                            <span class="env-value">平静</span>
+                        </div>
+                        <div class="env-item">
+                            <span class="env-label">风向:</span>
+                            <span class="env-value">东北风 3级</span>
+                        </div>
+                        <div class="env-item">
+                            <span class="env-label">能见度:</span>
+                            <span class="env-value">良好</span>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </aside>
         </main>
 
         <!-- 游戏结果弹窗 -->
