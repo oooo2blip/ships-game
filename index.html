@@ -592,7 +592,7 @@ function init(){
 
 function buildDock(){
   const dock=document.getElementById('shipDock');
-  Array.from(dock.children).slice(2,-1).forEach(el=>el.remove());
+  Array.from(dock.children).slice(2).forEach(el=>el.remove());
   SHIPS_DATA.forEach((s,i)=>{
     const el=document.createElement('div');el.className='ship-option';el.id=`opt${i}`;
     el.innerHTML=`<span>${SHIP_SVGS[i]()}</span><div><div class="ship-option-name">${s.name}</div><div class="ship-option-size">${s.size}格</div></div>`;
